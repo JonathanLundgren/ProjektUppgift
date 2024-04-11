@@ -26,12 +26,12 @@ namespace ProjektUppgift
         double angle = 0;
         double positionX = 1.5;
         double positionY = 0.5;
-        double positionZ = 2;
+        double positionZ = 1.5;
         double roomHeight = 1;
         Color roomColor = Color.DarkGreen;
         Color roomColorPattern = Color.DarkGray;
         Color roofColor = Color.DarkBlue;
-        double lineSize = 0.1;
+        double lineSize = 0.03;
         List<Face> currentRoom = new List<Face>();
         public Form1()
         {
@@ -181,24 +181,12 @@ namespace ProjektUppgift
         {
             double a = Math.Tan(verticalAngle * Math.PI / 180);
             double c = Math.Tan(horizontalAngle * Math.PI / 180);
-            double a8 = Math.Pow(a, 8);
-            double a4 = Math.Pow(a, 4);
-            double c4 = Math.Pow(c, 4);
-            double c2 = Math.Pow(c, 2);
-            double d = a8 / (4 * c4 + 8 * c2 + 4);
-            double e = a4 / (c4 + 2 * c2 + 1);
-            double f = a4 / (2 * c2 + 2);
-            z = Math.Sqrt(Math.Sqrt(d + e) - f);
-            y = Math.Sqrt(1 - z * z * (c2 + 1));
+            double a2 = a * a;
+            double c2 = c * c;
+            double d = c2 + a2 * (c2 + 1) + 1;
+            z = Math.Sqrt(1 / d);
+            y = a * Math.Sqrt(z * z * (c2 + 1));
             x = c * z;
-            if (horizontalAngle < 0)
-            {
-                x = -x;
-            }
-            if (verticalAngle < 0)
-            {
-                y = -y;
-            }
         }
     }
 
