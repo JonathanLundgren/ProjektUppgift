@@ -108,7 +108,7 @@ namespace ProjektUppgift
                 if (face.isDirectionX)
                 {
                     double hitZ = (face.LowerBoundX - positionX) * z / x + positionZ;
-                    if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
+                    if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ && (hitZ - positionZ) * z >= 0)
                     {
                         double hitY = (face.LowerBoundX - positionX) * y / x + positionY;
                         if (0 <= hitY && hitY <= roomHeight)
@@ -126,7 +126,7 @@ namespace ProjektUppgift
                 else
                 {
                     double hitX = (face.LowerBoundZ - positionZ) * x / z + positionX;
-                    if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
+                    if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX && (hitX - positionX) * x >= 0)
                     {
                         double hitY = (face.LowerBoundZ - positionZ) * y / z + positionY;
                         if (0 <= hitY && hitY <= roomHeight)
@@ -187,6 +187,26 @@ namespace ProjektUppgift
             z = Math.Sqrt(1 / d);
             y = a * Math.Sqrt(z * z * (c2 + 1));
             x = c * z;
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.W) 
+            {
+                positionZ += 0.1;
+            }
+            if (e.KeyCode == Keys.S)
+            {
+                positionZ -= 0.1;
+            }
+            if (e.KeyCode == Keys.D)
+            {
+                positionX += 0.1;
+            }
+            if (e.KeyCode == Keys.A)
+            {
+                positionX -= 0.1;
+            }
         }
     }
 
