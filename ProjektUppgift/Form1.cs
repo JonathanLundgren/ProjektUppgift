@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -21,10 +22,11 @@ namespace ProjektUppgift
         readonly int newWidth = width / resolution;
         readonly int newHeight = height / resolution;
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
-        int[] testRoom = new int[25] { 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1 };
+        int[,] testRoomCode = new int[3,3] {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
         double angle = 0;
         double positionX = 0;
         double positionY = 0;
+        List<Face> currentRoom = new List<Face>();
         public Form1()
         {
             InitializeComponent();
@@ -34,15 +36,39 @@ namespace ProjektUppgift
             {
                 for (int j = 0; j < newHeight; j++) 
                 {
-                    pixels[i, j] = new Pixel(i, j, fovHorizontal * ((newWidth / 2) - i) / newWidth, fovVertical * ((newHeight / 2) - i) / newHeight);
+                    pixels[i, j] = new Pixel( fovHorizontal * ((newWidth / 2) - i) / newWidth, fovVertical * ((newHeight / 2) - i) / newHeight);
                 }
             }
+            currentRoom = GenerateRoom(testRoomCode);
+
         }
 
-        private List<Face> GenerateRoom()
+        private List<Face> GenerateRoom(int[,] roomCode)
         {
             List<Face> room = new List<Face>();
-
+            for(int i = 0; i < roomCode.GetLength(0);  i++)
+            {
+                if (roomCode[i, roomCode.GetLength(1) - 1] == 0)
+                {
+                    room.Add(new Face(false, i, 0, i + 1, 0));
+                }
+                if (roomCode[i, 0] == 0)
+                {
+                    room.Add(new Face(false, i, roomCode.GetLength(1) - 1, i + 1, roomCode.GetLength(1) - 1));
+                }
+            }
+            for (int i = 0; i < roomCode.GetLength(1); i++)
+            {
+                if (roomCode[roomCode.GetLength(0) - 1, i] == 0)
+                {
+                    room.Add(new Face(true, 0, i, 0, i + 1));
+                }
+                if (roomCode[0, i] == 0)
+                {
+                    room.Add(new Face(true, roomCode.GetLength(0) - 1, i, roomCode.GetLength(0) - 1, i + 1));
+                }
+            }
+            return room;
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -67,20 +93,15 @@ namespace ProjektUppgift
 
     public class Pixel
     {
-        int posX;
-        int posY;
-        double angleHorizontal;
-        double angleVertical;
-        public Label pictureBox;
-        Random rand;
+        public double angleHorizontal;
+        public double angleVertical;
+        Random rand = new Random();
 
-        public Pixel(int x, int y, double angleHorizontal, double angleVertical) 
+        public Pixel(double angleHorizontal, double angleVertical) 
         {
-            posX = x;
-            posY = y;
+
             this.angleHorizontal = angleHorizontal;
             this.angleVertical = angleVertical;
-            rand = new Random(posX + posY * 1000);
         }
 
         public Color GetColor()
@@ -92,14 +113,18 @@ namespace ProjektUppgift
     public class Face
     {
         public bool isDirectionX;
-        public double leftBound;
-        public double rightBound;
+        public double LeftBoundX;
+        public double LeftBoundZ;
+        public double RightBoundX;
+        public double RightBoundZ;
 
-        Face(bool isDirectionX, double leftBound, double rightBound)
+        public Face(bool isDirectionX, double LeftBoundX, double LeftBoundZ , double RightBoundX, double RightBoundZ)
         {
             this.isDirectionX = isDirectionX;
-            this.leftBound = leftBound;
-            this.rightBound = rightBound;
+            this.LeftBoundX = LeftBoundX;
+            this.LeftBoundZ = LeftBoundZ;
+            this.RightBoundX = RightBoundX;
+            this.RightBoundZ = RightBoundZ;
         }
     }
 }
