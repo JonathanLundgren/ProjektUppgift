@@ -24,8 +24,14 @@ namespace ProjektUppgift
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
         int[,] testRoomCode = new int[3,3] {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
         double angle = 0;
-        double positionX = 0;
-        double positionY = 0;
+        double positionX = 1.5;
+        double positionY = 0.5;
+        double positionZ = 2;
+        double roomHeight = 1;
+        Color roomColor = Color.DarkGreen;
+        Color roomColorPattern = Color.DarkGray;
+        Color roofColor = Color.DarkBlue;
+        double lineSize = 0.1;
         List<Face> currentRoom = new List<Face>();
         public Form1()
         {
@@ -36,7 +42,7 @@ namespace ProjektUppgift
             {
                 for (int j = 0; j < newHeight; j++) 
                 {
-                    pixels[i, j] = new Pixel( fovHorizontal * ((newWidth / 2) - i) / newWidth, fovVertical * ((newHeight / 2) - i) / newHeight);
+                    pixels[i, j] = new Pixel(fovHorizontal * (i - (newWidth / 2)) / newWidth, fovVertical * (j -(newHeight / 2)) / newHeight);
                 }
             }
             currentRoom = GenerateRoom(testRoomCode);
@@ -48,24 +54,24 @@ namespace ProjektUppgift
             List<Face> room = new List<Face>();
             for(int i = 0; i < roomCode.GetLength(0);  i++)
             {
-                if (roomCode[i, roomCode.GetLength(1) - 1] == 0)
+                if (roomCode[i, 0] == 0)
                 {
                     room.Add(new Face(false, i, 0, i + 1, 0));
                 }
-                if (roomCode[i, 0] == 0)
+                if (roomCode[i, roomCode.GetLength(1) - 1] == 0)
                 {
-                    room.Add(new Face(false, i, roomCode.GetLength(1) - 1, i + 1, roomCode.GetLength(1) - 1));
+                    room.Add(new Face(false, i, roomCode.GetLength(1), i + 1, roomCode.GetLength(1)));
                 }
             }
             for (int i = 0; i < roomCode.GetLength(1); i++)
             {
-                if (roomCode[roomCode.GetLength(0) - 1, i] == 0)
+                if (roomCode[0, i] == 0)
                 {
                     room.Add(new Face(true, 0, i, 0, i + 1));
                 }
-                if (roomCode[0, i] == 0)
+                if (roomCode[roomCode.GetLength(0) - 1, i] == 0)
                 {
-                    room.Add(new Face(true, roomCode.GetLength(0) - 1, i, roomCode.GetLength(0) - 1, i + 1));
+                    room.Add(new Face(true, roomCode.GetLength(0), i, roomCode.GetLength(0), i + 1));
                 }
             }
             return room;
@@ -83,11 +89,116 @@ namespace ProjektUppgift
             {
                 for (int j = 0; j < newHeight; j++)
                 {
-                    Color color = pixels[i, j].GetColor();
+                    Color color = CalculatePixel(pixels[i, j]);
                     bmp.SetPixel(i, j, color);
                 }
             }
             pictureBox1.Image = bmp;
+        }
+
+        public Color CalculatePixel(Pixel pixel)
+        {
+            CalculateRatio(pixel.angleHorizontal, pixel.angleVertical, out double x, out double y, out double z);
+            Face currentClosest = null;
+            double proximity = 10000;
+            double relativeHitFromLower = 0;
+            double relativeHitY = 0;
+            foreach (Face face in currentRoom)
+            {
+                if (face.isDirectionX)
+                {
+                    double hitZ = (face.LowerBoundX - positionX) * z / x + positionZ;
+                    if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
+                    {
+                        double hitY = (face.LowerBoundX - positionX) * y / x + positionY;
+                        if (0 <= hitY && hitY <= roomHeight)
+                        {
+                            if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
+                            {
+                                currentClosest = face;
+                                proximity = Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2);
+                                relativeHitFromLower = hitZ - face.LowerBoundZ;
+                                relativeHitY = hitY;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    double hitX = (face.LowerBoundZ - positionZ) * x / z + positionX;
+                    if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
+                    {
+                        double hitY = (face.LowerBoundZ - positionZ) * y / z + positionY;
+                        if (0 <= hitY && hitY <= roomHeight)
+                        {
+                            if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
+                            {
+                                currentClosest = face;
+                                proximity = Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2);
+                                relativeHitFromLower = hitX - face.LowerBoundX;
+                                relativeHitY = hitY;
+                            }
+                        }
+                    }
+                }
+            }
+            if (currentClosest != null)
+            {
+                if (currentClosest.isDirectionX)
+                {
+                    if (Math.Abs(relativeHitFromLower - currentClosest.LowerBoundZ) < lineSize || Math.Abs(currentClosest.HigherBoundZ - relativeHitFromLower) < lineSize)
+                    {
+                        return roomColorPattern;
+                    }
+                }
+                else
+                {
+                    if (Math.Abs(relativeHitFromLower - currentClosest.LowerBoundX) < lineSize || Math.Abs(currentClosest.HigherBoundX - relativeHitFromLower) < lineSize)
+                    {
+                        return roomColorPattern;
+                    }
+                }
+                if (Math.Abs(relativeHitY) < lineSize || Math.Abs(roomHeight - relativeHitY) < lineSize)
+                {
+                    return roomColorPattern;
+                }
+                else if (Math.Abs(relativeHitY - relativeHitFromLower) < lineSize || Math.Abs(roomHeight - relativeHitY - relativeHitFromLower) < lineSize)
+                {
+                    return roomColorPattern;
+                }
+                else
+                {
+                    return roomColor;
+                }
+            }
+            else
+            {
+                return roofColor;
+            }
+        }
+
+        public void CalculateRatio(double horizontalAngle, double verticalAngle, out double x, out double y, out double z)
+        {
+            double a = Math.Tan(verticalAngle * Math.PI / 180);
+            double c = Math.Tan(horizontalAngle * Math.PI / 180);
+            double a8 = Math.Pow(a, 8);
+            double a4 = Math.Pow(a, 4);
+            double c4 = Math.Pow(c, 4);
+            double c2 = Math.Pow(c, 2);
+            double d = a8 / (4 * c4 + 8 * c2 + 4);
+            double e = a4 / (c4 + 2 * c2 + 1);
+            double f = a4 / (2 * c2 + 2);
+            z = Math.Sqrt(Math.Sqrt(d + e) - f);
+            y = Math.Sqrt(1 - z * z * (c2 + 1));
+            x = c * z;
+            if (horizontalAngle < 0)
+            {
+                x = -x;
+            }
+            if (verticalAngle < 0)
+            {
+                y = -y;
+            }
         }
     }
 
@@ -113,18 +224,22 @@ namespace ProjektUppgift
     public class Face
     {
         public bool isDirectionX;
-        public double LeftBoundX;
-        public double LeftBoundZ;
-        public double RightBoundX;
-        public double RightBoundZ;
+        public double LowerBoundX;
+        public double LowerBoundZ;
+        public double HigherBoundX;
+        public double HigherBoundZ;
+        public double midX;
+        public double midZ;
 
-        public Face(bool isDirectionX, double LeftBoundX, double LeftBoundZ , double RightBoundX, double RightBoundZ)
+        public Face(bool isDirectionX, double LowerBoundX, double LowerBoundZ , double HigherBoundX, double HigherBoundZ)
         {
             this.isDirectionX = isDirectionX;
-            this.LeftBoundX = LeftBoundX;
-            this.LeftBoundZ = LeftBoundZ;
-            this.RightBoundX = RightBoundX;
-            this.RightBoundZ = RightBoundZ;
+            this.LowerBoundX = LowerBoundX;
+            this.LowerBoundZ = LowerBoundZ;
+            this.HigherBoundX = HigherBoundX;
+            this.HigherBoundZ = HigherBoundZ;
+            midX = (HigherBoundX + LowerBoundX) / 2;
+            midZ = (HigherBoundZ + LowerBoundZ) / 2;
         }
     }
 }
