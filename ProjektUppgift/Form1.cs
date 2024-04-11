@@ -17,8 +17,8 @@ namespace ProjektUppgift
         const int width = 1200;
         const int height = 800;
         const int resolution = 4;
-        const int fovHorizontal = 90;
-        const int fovVertical = 90;
+        const int fovHorizontal = 120;
+        const int fovVertical = 75;
         readonly int newWidth = width / resolution;
         readonly int newHeight = height / resolution;
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
@@ -98,7 +98,7 @@ namespace ProjektUppgift
 
         public Color CalculatePixel(Pixel pixel)
         {
-            CalculateRatio(pixel.angleHorizontal, pixel.angleVertical, out double x, out double y, out double z);
+            CalculateRatio(pixel.angleHorizontal + angle, pixel.angleVertical, out double x, out double y, out double z);
             Face currentClosest = null;
             double proximity = 10000;
             double relativeHitFromLower = 0;
@@ -108,17 +108,25 @@ namespace ProjektUppgift
                 if (face.isDirectionX)
                 {
                     double hitZ = (face.LowerBoundX - positionX) * z / x + positionZ;
-                    if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ && (hitZ - positionZ) * z >= 0)
+                    double direction = (180 / Math.PI) * Math.Atan((hitZ - positionZ) / (face.LowerBoundX - positionZ));
+                    if ((face.LowerBoundX - positionX < 0 && hitZ - positionZ < 0) || (face.LowerBoundX - positionX < 0 && hitZ - positionZ > 0))
                     {
-                        double hitY = (face.LowerBoundX - positionX) * y / x + positionY;
-                        if (0 <= hitY && hitY <= roomHeight)
+                        direction += 180;
+                    }
+                    if (Math.Abs(direction - angle - 90) < 90 || Math.Abs(direction + 360 - angle - 90) < 90)
+                    {
+                        if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
                         {
-                            if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
+                            double hitY = (face.LowerBoundX - positionX) * y / x + positionY;
+                            if (0 <= hitY && hitY <= roomHeight)
                             {
-                                currentClosest = face;
-                                proximity = Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2);
-                                relativeHitFromLower = hitZ - face.LowerBoundZ;
-                                relativeHitY = hitY;
+                                if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
+                                {
+                                    currentClosest = face;
+                                    proximity = Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2);
+                                    relativeHitFromLower = hitZ - face.LowerBoundZ;
+                                    relativeHitY = hitY;
+                                }
                             }
                         }
                     }
@@ -126,17 +134,25 @@ namespace ProjektUppgift
                 else
                 {
                     double hitX = (face.LowerBoundZ - positionZ) * x / z + positionX;
-                    if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX && (hitX - positionX) * x >= 0)
+                    double direction = (180 / Math.PI) * Math.Atan((face.LowerBoundZ - positionZ) / (hitX - positionX));
+                    if ((face.LowerBoundZ - positionZ < 0 && hitX - positionX < 0) || (hitX - positionX < 0 && face.LowerBoundZ - positionZ > 0))
                     {
-                        double hitY = (face.LowerBoundZ - positionZ) * y / z + positionY;
-                        if (0 <= hitY && hitY <= roomHeight)
+                        direction += 180;
+                    }
+                    if (Math.Abs(direction - angle - 90) < 90 || Math.Abs(direction + 360 - angle - 90) < 90)
+                    {
+                        if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
                         {
-                            if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
+                            double hitY = (face.LowerBoundZ - positionZ) * y / z + positionY;
+                            if (0 <= hitY && hitY <= roomHeight)
                             {
-                                currentClosest = face;
-                                proximity = Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2);
-                                relativeHitFromLower = hitX - face.LowerBoundX;
-                                relativeHitY = hitY;
+                                if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
+                                {
+                                    currentClosest = face;
+                                    proximity = Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2);
+                                    relativeHitFromLower = hitX - face.LowerBoundX;
+                                    relativeHitY = hitY;
+                                }
                             }
                         }
                     }
@@ -206,6 +222,14 @@ namespace ProjektUppgift
             if (e.KeyCode == Keys.A)
             {
                 positionX -= 0.1;
+            }
+            if (e.KeyCode == Keys.Left)
+            {
+                angle += 10;
+            }
+            if (e.KeyCode == Keys.Right)
+            {
+                angle -= 10;
             }
         }
     }
