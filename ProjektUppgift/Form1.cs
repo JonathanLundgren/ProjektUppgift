@@ -109,11 +109,7 @@ namespace ProjektUppgift
                 if (face.isDirectionX)
                 {
                     double hitZ = (face.LowerBoundX - positionX) * z / x + positionZ;
-                    double direction = (180 / Math.PI) * Math.Atan2((hitZ - positionZ), (face.LowerBoundX - positionX));
-                    if ((face.LowerBoundX - positionX < 0 && hitZ - positionZ < 0) || (face.LowerBoundX - positionX < 0 && hitZ - positionZ > 0))
-                    {
-                        direction += 180;
-                    }
+                    double direction = (180 / Math.PI) * Math.Atan2(hitZ - positionZ, face.LowerBoundX - positionX);
                     if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
                     {
                         if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
@@ -136,11 +132,7 @@ namespace ProjektUppgift
                 else
                 {
                     double hitX = (face.LowerBoundZ - positionZ) * x / z + positionX;
-                    double direction = (180 / Math.PI) * Math.Atan((face.LowerBoundZ - positionZ) / (hitX - positionX));
-                    if ((face.LowerBoundZ - positionZ < 0 && hitX - positionX < 0) || (hitX - positionX < 0 && face.LowerBoundZ - positionZ > 0))
-                    {
-                        direction += 180;
-                    }
+                    double direction = (180 / Math.PI) * Math.Atan2(face.LowerBoundZ - positionZ, hitX - positionX);
                     if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
                     {
                         if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
