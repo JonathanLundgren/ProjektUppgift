@@ -274,8 +274,8 @@ namespace ProjektUppgift
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
         public void CalculateRatio(double localXPos, double localYPos, double angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition)
         {
-            double verticalAngle = Math.Atan(localYPos * (imageScale - 1)) * 180 / Math.PI;
-            double horizontalAngle = Math.Atan(localXPos * (imageScale - 1)) * 180 / Math.PI + angle;
+            double verticalAngle = Math.Atan2(localYPos * (imageScale - 1), 1) * 180 / Math.PI;
+            double horizontalAngle = Math.Atan2(localXPos * (imageScale - 1), 1) * 180 / Math.PI + angle;
             double a = Math.Tan(verticalAngle * Math.PI / 180);
             double c = Math.Tan(horizontalAngle * Math.PI / 180);
             double a2 = a * a;
@@ -284,8 +284,8 @@ namespace ProjektUppgift
             zDirection = Math.Sqrt(1 / d);
             yDirection = a * Math.Sqrt(zDirection * zDirection * (c2 + 1));
             xDirection = c * zDirection;
-            xPosition = localXPos * Math.Sin(angle) + playerPositionX;
-            zPosition = localXPos * Math.Cos(angle) + playerPositionZ;
+            xPosition = localXPos * Math.Cos(angle) + playerPositionX;
+            zPosition = localXPos * Math.Sin(angle) + playerPositionZ;
             yPosition = localYPos + playerPositionY;
         }
 
