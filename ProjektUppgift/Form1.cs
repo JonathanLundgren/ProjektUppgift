@@ -47,8 +47,8 @@ namespace ProjektUppgift
         const int height = 800;
         //Hur hög upplösning det är. Mindre värde ger högre upplösning.
         const int resolution = 4;
-        double imageSize = 0.3;
-        double imageScale = 5;
+        double imageSize = 1;
+        double imageScale = 2;
         //I hur stor vinkel spelaren kan se.
         const int fovHorizontal = 120;
         const int fovVertical = 75;
@@ -274,8 +274,8 @@ namespace ProjektUppgift
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
         public void CalculateRatio(double localXPos, double localYPos, double angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition)
         {
-            double verticalAngle = Math.Tan(localYPos * (imageScale - 1)) * 180 / Math.PI;
-            double horizontalAngle = Math.Tan(localXPos * (imageScale - 1)) * 180 / Math.PI + angle;
+            double verticalAngle = Math.Atan(localYPos * (imageScale - 1)) * 180 / Math.PI;
+            double horizontalAngle = Math.Atan(localXPos * (imageScale - 1)) * 180 / Math.PI + angle;
             double a = Math.Tan(verticalAngle * Math.PI / 180);
             double c = Math.Tan(horizontalAngle * Math.PI / 180);
             double a2 = a * a;
@@ -284,9 +284,9 @@ namespace ProjektUppgift
             zDirection = Math.Sqrt(1 / d);
             yDirection = a * Math.Sqrt(zDirection * zDirection * (c2 + 1));
             xDirection = c * zDirection;
-            xPosition = localXPos * Math.Sin(angle);
-            zPosition = localXPos * Math.Cos(angle);
-            yPosition = localYPos;
+            xPosition = localXPos * Math.Sin(angle) + playerPositionX;
+            zPosition = localXPos * Math.Cos(angle) + playerPositionZ;
+            yPosition = localYPos + playerPositionY;
         }
 
         //Kollar vilka knappar som trycks ned och flyttar eller roterar spelaren.
@@ -337,19 +337,19 @@ namespace ProjektUppgift
         {
             if (e.KeyCode == Keys.W)
             {
-                isWDown = -1;
+                isWDown = 0;
             }
             if (e.KeyCode == Keys.S)
             {
-                isSDown = -1;
+                isSDown = 0;
             }
             if (e.KeyCode == Keys.D)
             {
-                isDDown = -1;
+                isDDown = 0;
             }
             if (e.KeyCode == Keys.A)
             {
-                isADown = -1;
+                isADown = 0;
             }
         }
     }
