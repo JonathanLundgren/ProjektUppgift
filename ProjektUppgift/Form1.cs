@@ -62,9 +62,9 @@ namespace ProjektUppgift
         //Vilken riktning spelaren tittar mot.
         double angle = 0;
         //Spelarens position.
-        double positionX = 1.5;
-        double positionY = 0.5;
-        double positionZ = 1.5;
+        double playerPositionX = 1.5;
+        double playerPositionY = 0.5;
+        double playerPositionZ = 1.5;
         //Hur högt upp taket är.
         const double roomHeight = 1;
         Color roomColor = Color.DarkGreen;
@@ -142,8 +142,8 @@ namespace ProjektUppgift
                 double movementX = Math.Cos(movementDirection * Math.PI / 180);
                 double movementZ = Math.Sin(movementDirection * Math.PI / 180);
 
-                positionX += movementX * playerSpeed;
-                positionZ += movementZ * playerSpeed;
+                playerPositionX += movementX * playerSpeed;
+                playerPositionZ += movementZ * playerSpeed;
             }
         }
 
@@ -165,7 +165,7 @@ namespace ProjektUppgift
         //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas.
         public Color CalculatePixel(Pixel pixel)
         {
-            CalculateRatio(pixel.xPos, pixel.yPos, angle, out double xDirection, out double yDirection, out double zDirection);
+            CalculateRatio(pixel.xPos, pixel.yPos, angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition);
             Face currentClosest = null;
             double proximity = 10000;
             double relativeHitFromLower = 0;
@@ -175,20 +175,20 @@ namespace ProjektUppgift
             {
                 if (face.isDirectionX)
                 {
-                    double hitZ = (face.LowerBoundX - positionX) * zDirection / xDirection + positionZ;
-                    double direction = (180 / Math.PI) * Math.Atan2(hitZ - positionZ, face.LowerBoundX - positionX);
+                    double hitZ = (face.LowerBoundX - xPosition) * zDirection / xDirection + zPosition;
+                    double direction = (180 / Math.PI) * Math.Atan2(hitZ - zPosition, face.LowerBoundX - xPosition);
                     if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
                     {
                         if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
                         {
-                            double hitY = (face.LowerBoundX - positionX) * yDirection / xDirection + positionY;
+                            double hitY = (face.LowerBoundX - xPosition) * yDirection / xDirection + yPosition;
                             if (0 <= hitY && hitY <= roomHeight)
                             {
-                                if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
+                                if (Math.Pow(face.midX - xPosition, 2) + Math.Pow(face.midZ - zPosition, 2) < proximity)
                                 {
                                     currentClosest = face;
                                     color = face.color;
-                                    proximity = Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2);
+                                    proximity = Math.Pow(face.midX - xPosition, 2) + Math.Pow(face.midZ - zPosition, 2);
                                     relativeHitFromLower = hitZ - face.LowerBoundZ;
                                     relativeHitY = hitY;
                                 }
@@ -198,20 +198,20 @@ namespace ProjektUppgift
                 }
                 else
                 {
-                    double hitX = (face.LowerBoundZ - positionZ) * xDirection / zDirection + positionX;
-                    double direction = (180 / Math.PI) * Math.Atan2(face.LowerBoundZ - positionZ, hitX - positionX);
+                    double hitX = (face.LowerBoundZ - zPosition) * xDirection / zDirection + xPosition;
+                    double direction = (180 / Math.PI) * Math.Atan2(face.LowerBoundZ - zPosition, hitX - xPosition);
                     if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
                     {
                         if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
                         {
-                            double hitY = (face.LowerBoundZ - positionZ) * yDirection / zDirection + positionY;
+                            double hitY = (face.LowerBoundZ - zPosition) * yDirection / zDirection + yPosition;
                             if (0 <= hitY && hitY <= roomHeight)
                             {
-                                if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
+                                if (Math.Pow(face.midX - xPosition, 2) + Math.Pow(face.midZ - zPosition, 2) < proximity)
                                 {
                                     currentClosest = face;
                                     color = face.color;
-                                    proximity = Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2);
+                                    proximity = Math.Pow(face.midX - xPosition, 2) + Math.Pow(face.midZ - zPosition, 2);
                                     relativeHitFromLower = hitX - face.LowerBoundX;
                                     relativeHitY = hitY;
                                 }
@@ -252,13 +252,13 @@ namespace ProjektUppgift
             }
             else
             {
-                double hitX = (roomHeight - positionY) * xDirection / yDirection + positionX;
-                double hitZ = (roomHeight - positionY) * zDirection / yDirection + positionZ;
-                double direction = (180 / Math.PI) * Math.Atan2(hitZ - positionZ, hitX - positionX);
+                double hitX = (roomHeight - yPosition) * xDirection / yDirection + xPosition;
+                double hitZ = (roomHeight - yPosition) * zDirection / yDirection + zPosition;
+                double direction = (180 / Math.PI) * Math.Atan2(hitZ - zPosition, hitX - xPosition);
                 if (!(Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2))
                 {
-                    hitX = -positionY * xDirection / yDirection + positionX;
-                    hitZ = -positionY * zDirection / yDirection + positionZ;
+                    hitX = -yPosition * xDirection / yDirection + xPosition;
+                    hitZ = -yPosition * zDirection / yDirection + zPosition;
                 }
                 if (Math.Abs(Math.Round(hitX) - hitX) <= lineSize || Math.Abs(Math.Round(hitZ) - hitZ) <= lineSize)
                 {
@@ -274,16 +274,19 @@ namespace ProjektUppgift
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
         public void CalculateRatio(double localXPos, double localYPos, double angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition)
         {
-            double verticalAngle = Math.Tan(yPos / focalLength) * 180 / Math.PI;
-            double horizontalAngle = Math.Tan(xPos / focalLength) * 180 / Math.PI + angle;
+            double verticalAngle = Math.Tan(localYPos * (imageScale - 1)) * 180 / Math.PI;
+            double horizontalAngle = Math.Tan(localXPos * (imageScale - 1)) * 180 / Math.PI + angle;
             double a = Math.Tan(verticalAngle * Math.PI / 180);
             double c = Math.Tan(horizontalAngle * Math.PI / 180);
             double a2 = a * a;
             double c2 = c * c;
             double d = c2 + a2 * (c2 + 1) + 1;
-            z = Math.Sqrt(1 / d);
-            y = a * Math.Sqrt(z * z * (c2 + 1));
-            x = c * z;
+            zDirection = Math.Sqrt(1 / d);
+            yDirection = a * Math.Sqrt(zDirection * zDirection * (c2 + 1));
+            xDirection = c * zDirection;
+            xPosition = localXPos * Math.Sin(angle);
+            zPosition = localXPos * Math.Cos(angle);
+            yPosition = localYPos;
         }
 
         //Kollar vilka knappar som trycks ned och flyttar eller roterar spelaren.
