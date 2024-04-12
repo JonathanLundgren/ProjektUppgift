@@ -10,34 +10,78 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
 
+
+
+/*
+
+Styrspel i 3D
+
+av Jonathan Lundgren vårterminen 2024
+
+Kravspec: 
+
+Spelaren ska kunna röra sig fram- och baklänges eller i sidled, och snurra runt.
+Mönster ska finnas på väggar, golv och tak.
+Fiender som anfaller spelaren ska finnas i banan.
+spelaren ska kunna anfalla fiender.
+Det ska finnas power-ups utspridda i banan.
+spelaren ska ha ett HUD som visar liv och power-ups.
+Spelaren ska inte kunna gå genom väggar.
+
+Om jag hinner:
+Fler banor, och ett läge där man kan designa egna banor.
+Oändligt läge?
+
+Log :
+04/10 Kollade hur man kan sätta varje pixel på skärmen. Kollade på matematik som behövs.
+04/11 Gjorde så att spelaren befinner sig i ett litet rum. Det går nu att gå och titta runt, och väggarna har mönster. Det finns en viss "Fishbowl" effekt, som gör att väggarna ser runda ut och större mot mitten av skärmen.
+04/12 Golv och tak har nu mönster.
+
+*/
 namespace ProjektUppgift
 {
     public partial class Form1 : Form
     {
+        //Storleken på formsen
         const int width = 1200;
         const int height = 800;
+        //Hur hög upplösning det är. Mindre värde ger högre upplösning.
         const int resolution = 4;
+        //I hur stor vinkel spelaren kan se.
         const int fovHorizontal = 120;
         const int fovVertical = 75;
+        //Höjd och bredd som används för beräkningar.
         readonly int newWidth = width / resolution;
         readonly int newHeight = height / resolution;
+        //En två-dimensionell array med alla pixlar som kan ändras på.
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
+        //"RoomCodes" är arrayer som beskriver hur rummen ska se ut. Beräkningar utförs senare för att generera rummen på ett sätt som fungerar med resten av koden.
         int[,] testRoomCode = new int[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+        //Vilken riktning spelaren tittar mot.
         double angle = 0;
+        //Spelarens position.
         double positionX = 1.5;
         double positionY = 0.5;
         double positionZ = 1.5;
-        double roomHeight = 1;
+        //Hur högt upp taket är.
+        const double roomHeight = 1;
         Color roomColor = Color.DarkGreen;
         Color roomColorPattern = Color.DarkGray;
         Color roofColor = Color.DarkBlue;
         double lineSize = 0.1;
+        //Alla ytor som finns i det genererade rummet.
         List<Face> currentRoom = new List<Face>();
+        int isWDown = 0;
+        int isSDown = 0;
+        int isADown = 0;
+        int isDDown = 0;
+        double playerSpeed = 0.1;
         public Form1()
         {
             InitializeComponent();
             pictureBox1.ClientSize = new Size(width, height);
             this.Size = new Size(width, height);
+            //Genererar alla pixlar som behövs.
             for (int i = 0; i < newWidth; i++) 
             {
                 for (int j = 0; j < newHeight; j++) 
@@ -49,6 +93,7 @@ namespace ProjektUppgift
 
         }
 
+        //Metod som genererar rum utifrån en "RoomCode".
         private List<Face> GenerateRoom(int[,] roomCode)
         {
             List<Face> room = new List<Face>();
@@ -77,11 +122,30 @@ namespace ProjektUppgift
             return room;
         }
 
+        //En timer används för att generera nästa frame.
         private void timer1_Tick(object sender, EventArgs e)
         {
             UpdateImage();
+            MovePlayer();
         }
 
+        public void MovePlayer()
+        {
+            double horizontal = isDDown - isADown;
+            double vertical = isWDown - isSDown;
+            if (!(horizontal == 0 && vertical == 0))
+            {
+                double movementDirection = Math.Atan2(horizontal, vertical) * 180 / Math.PI + angle + 90;
+
+                double movementZ = Math.Cos(movementDirection * Math.PI / 180);
+                double movementX = Math.Sin(movementDirection * Math.PI / 180);
+
+                positionX += movementX * playerSpeed;
+                positionZ += movementZ * playerSpeed;
+            }
+        }
+
+        //Genererar en bild utifrån alla pixlar som används, och sätter den sedan som den bild som syns.
         public void UpdateImage()
         {
             Bitmap bmp = new Bitmap(newWidth, newHeight);
@@ -96,6 +160,7 @@ namespace ProjektUppgift
             pictureBox1.Image = bmp;
         }
 
+        //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas.
         public Color CalculatePixel(Pixel pixel)
         {
             CalculateRatio(pixel.angleHorizontal + angle, pixel.angleVertical, out double x, out double y, out double z);
@@ -153,6 +218,7 @@ namespace ProjektUppgift
                     }
                 }
             }
+            //Kod som gör olika mönster.
             if (currentClosest != null)
             {
                 if (currentClosest.isDirectionX)
@@ -184,10 +250,26 @@ namespace ProjektUppgift
             }
             else
             {
-                return roofColor;
+                double hitX = (roomHeight - positionY) * x / y + positionX;
+                double hitZ = (roomHeight - positionY) * z / y + positionZ;
+                double direction = (180 / Math.PI) * Math.Atan2(hitZ - positionZ, hitX - positionX);
+                if (!(Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2))
+                {
+                    hitX = -positionY * x / y + positionX;
+                    hitZ = -positionY * z / y + positionZ;
+                }
+                if (Math.Abs(Math.Round(hitX) - hitX) <= lineSize || Math.Abs(Math.Round(hitZ) - hitZ) <= lineSize)
+                {
+                    return roomColorPattern;
+                }
+                else
+                {
+                    return roofColor;
+                }
             }
         }
 
+        //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
         public void CalculateRatio(double horizontalAngle, double verticalAngle, out double x, out double y, out double z)
         {
             double a = Math.Tan(verticalAngle * Math.PI / 180);
@@ -200,23 +282,24 @@ namespace ProjektUppgift
             x = c * z;
         }
 
+        //Kollar vilka knappar som trycks ned och flyttar eller roterar spelaren.
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.W) 
             {
-                positionZ += 0.1;
+                isWDown = 1;
             }
             if (e.KeyCode == Keys.S)
             {
-                positionZ -= 0.1;
+                isSDown = 1;
             }
             if (e.KeyCode == Keys.D)
             {
-                positionX += 0.1;
+                isDDown = 1;
             }
             if (e.KeyCode == Keys.A)
             {
-                positionX -= 0.1;
+                isADown = 1;
             }
             if (e.KeyCode == Keys.Left)
             {
@@ -230,6 +313,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Metod som ser till att vinkeln håller sig mellan -180 och 180.
         private void fixAngle()
         {
             if (angle < -180) 
@@ -241,8 +325,29 @@ namespace ProjektUppgift
                 angle -= 360;
             }
         }
+
+        private void Form1_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.W)
+            {
+                isWDown = -1;
+            }
+            if (e.KeyCode == Keys.S)
+            {
+                isSDown = -1;
+            }
+            if (e.KeyCode == Keys.D)
+            {
+                isDDown = -1;
+            }
+            if (e.KeyCode == Keys.A)
+            {
+                isADown = -1;
+            }
+        }
     }
 
+    //Varje pixel förvarar data om åt vilket håll de ska "titta" mot.
     public class Pixel
     {
         public double angleHorizontal;
@@ -256,6 +361,7 @@ namespace ProjektUppgift
         }
     }
 
+    //Data om varje vägg.
     public class Face
     {
         public bool isDirectionX;
