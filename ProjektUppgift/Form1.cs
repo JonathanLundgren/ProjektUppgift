@@ -47,6 +47,8 @@ namespace ProjektUppgift
         const int height = 800;
         //Hur hög upplösning det är. Mindre värde ger högre upplösning.
         const int resolution = 4;
+        double imageSize = 0.3;
+        double imageScale = 5;
         //I hur stor vinkel spelaren kan se.
         const int fovHorizontal = 120;
         const int fovVertical = 75;
@@ -86,7 +88,7 @@ namespace ProjektUppgift
             {
                 for (int j = 0; j < newHeight; j++) 
                 {
-                    pixels[i, j] = new Pixel(fovHorizontal * (i - (newWidth / 2)) / newWidth, fovVertical * (j -(newHeight / 2)) / newHeight);
+                    pixels[i, j] = new Pixel(imageSize * (i - (newWidth / 2)) / newWidth, imageSize * (j -(newHeight / 2)) / newWidth);
                 }
             }
             currentRoom = GenerateRoom(testRoomCode);
@@ -163,7 +165,7 @@ namespace ProjektUppgift
         //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas.
         public Color CalculatePixel(Pixel pixel)
         {
-            CalculateRatio(pixel.angleHorizontal + angle, pixel.angleVertical, out double x, out double y, out double z);
+            CalculateRatio(pixel.xPos, pixel.yPos, angle, out double xDirection, out double yDirection, out double zDirection);
             Face currentClosest = null;
             double proximity = 10000;
             double relativeHitFromLower = 0;
@@ -173,13 +175,13 @@ namespace ProjektUppgift
             {
                 if (face.isDirectionX)
                 {
-                    double hitZ = (face.LowerBoundX - positionX) * z / x + positionZ;
+                    double hitZ = (face.LowerBoundX - positionX) * zDirection / xDirection + positionZ;
                     double direction = (180 / Math.PI) * Math.Atan2(hitZ - positionZ, face.LowerBoundX - positionX);
                     if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
                     {
                         if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
                         {
-                            double hitY = (face.LowerBoundX - positionX) * y / x + positionY;
+                            double hitY = (face.LowerBoundX - positionX) * yDirection / xDirection + positionY;
                             if (0 <= hitY && hitY <= roomHeight)
                             {
                                 if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
@@ -196,13 +198,13 @@ namespace ProjektUppgift
                 }
                 else
                 {
-                    double hitX = (face.LowerBoundZ - positionZ) * x / z + positionX;
+                    double hitX = (face.LowerBoundZ - positionZ) * xDirection / zDirection + positionX;
                     double direction = (180 / Math.PI) * Math.Atan2(face.LowerBoundZ - positionZ, hitX - positionX);
                     if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
                     {
                         if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
                         {
-                            double hitY = (face.LowerBoundZ - positionZ) * y / z + positionY;
+                            double hitY = (face.LowerBoundZ - positionZ) * yDirection / zDirection + positionY;
                             if (0 <= hitY && hitY <= roomHeight)
                             {
                                 if (Math.Pow(face.midX - positionX, 2) + Math.Pow(face.midZ - positionZ, 2) < proximity)
@@ -250,13 +252,13 @@ namespace ProjektUppgift
             }
             else
             {
-                double hitX = (roomHeight - positionY) * x / y + positionX;
-                double hitZ = (roomHeight - positionY) * z / y + positionZ;
+                double hitX = (roomHeight - positionY) * xDirection / yDirection + positionX;
+                double hitZ = (roomHeight - positionY) * zDirection / yDirection + positionZ;
                 double direction = (180 / Math.PI) * Math.Atan2(hitZ - positionZ, hitX - positionX);
                 if (!(Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2))
                 {
-                    hitX = -positionY * x / y + positionX;
-                    hitZ = -positionY * z / y + positionZ;
+                    hitX = -positionY * xDirection / yDirection + positionX;
+                    hitZ = -positionY * zDirection / yDirection + positionZ;
                 }
                 if (Math.Abs(Math.Round(hitX) - hitX) <= lineSize || Math.Abs(Math.Round(hitZ) - hitZ) <= lineSize)
                 {
@@ -270,8 +272,10 @@ namespace ProjektUppgift
         }
 
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
-        public void CalculateRatio(double horizontalAngle, double verticalAngle, out double x, out double y, out double z)
+        public void CalculateRatio(double localXPos, double localYPos, double angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition)
         {
+            double verticalAngle = Math.Tan(yPos / focalLength) * 180 / Math.PI;
+            double horizontalAngle = Math.Tan(xPos / focalLength) * 180 / Math.PI + angle;
             double a = Math.Tan(verticalAngle * Math.PI / 180);
             double c = Math.Tan(horizontalAngle * Math.PI / 180);
             double a2 = a * a;
@@ -352,12 +356,14 @@ namespace ProjektUppgift
     {
         public double angleHorizontal;
         public double angleVertical;
+        public double xPos;
+        public double yPos;
 
-        public Pixel(double angleHorizontal, double angleVertical) 
+        public Pixel(double xPos, double yPos) 
         {
 
-            this.angleHorizontal = angleHorizontal;
-            this.angleVertical = angleVertical;
+            this.xPos = xPos;
+            this.yPos = yPos;
         }
     }
 

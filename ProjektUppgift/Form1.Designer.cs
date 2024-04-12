@@ -52,7 +52,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1184, 761);
+            this.ClientSize = new System.Drawing.Size(2084, 761);
             this.Controls.Add(this.pictureBox1);
             this.KeyPreview = true;
             this.Name = "Form1";
