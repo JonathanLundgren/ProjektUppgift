@@ -34,7 +34,7 @@ Oändligt läge?
 
 Log :
 04/10 Kollade hur man kan sätta varje pixel på skärmen. Kollade på matematik som behövs.
-04/11 Gjorde så att spelaren befinner sig i ett litet rum. Det går nu att gå och titta runt, och väggarna har mönster. Det finns en viss "Fishbowl" effekt, som gör att väggarna ser runda ut och större mot mitten av skärmen.
+04/11 Gjorde så att spelaren befinner sig i ett litet rum. Det går nu att gå och titta runt, och väggarna har mönster. Det finns en viss "Fisheye" effekt, som gör att väggarna ser runda ut och större mot mitten av skärmen.
 04/12 Golv och tak har nu mönster.
 
 */
@@ -135,10 +135,10 @@ namespace ProjektUppgift
             double vertical = isWDown - isSDown;
             if (!(horizontal == 0 && vertical == 0))
             {
-                double movementDirection = Math.Atan2(horizontal, vertical) * 180 / Math.PI + angle + 90;
+                double movementDirection = Math.Atan2(vertical, horizontal) * 180 / Math.PI - angle;
 
-                double movementZ = Math.Cos(movementDirection * Math.PI / 180);
-                double movementX = Math.Sin(movementDirection * Math.PI / 180);
+                double movementX = Math.Cos(movementDirection * Math.PI / 180);
+                double movementZ = Math.Sin(movementDirection * Math.PI / 180);
 
                 positionX += movementX * playerSpeed;
                 positionZ += movementZ * playerSpeed;
