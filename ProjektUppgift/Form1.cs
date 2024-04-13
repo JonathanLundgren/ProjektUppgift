@@ -176,7 +176,7 @@ namespace ProjektUppgift
                 if (face.isDirectionX)
                 {
                     double hitZ = (face.LowerBoundX - xPosition) * zDirection / xDirection + zPosition;
-                    double direction = (180 / Math.PI) * Math.Atan2(hitZ - zPosition, face.LowerBoundX - xPosition);
+                    double direction = (180 / Math.PI) * Math.Atan2(hitZ - playerPositionZ, face.LowerBoundX - playerPositionX);
                     if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
                     {
                         if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
@@ -199,7 +199,7 @@ namespace ProjektUppgift
                 else
                 {
                     double hitX = (face.LowerBoundZ - zPosition) * xDirection / zDirection + xPosition;
-                    double direction = (180 / Math.PI) * Math.Atan2(face.LowerBoundZ - zPosition, hitX - xPosition);
+                    double direction = (180 / Math.PI) * Math.Atan2(face.LowerBoundZ - playerPositionZ, hitX - playerPositionX);
                     if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
                     {
                         if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
@@ -254,7 +254,7 @@ namespace ProjektUppgift
             {
                 double hitX = (roomHeight - yPosition) * xDirection / yDirection + xPosition;
                 double hitZ = (roomHeight - yPosition) * zDirection / yDirection + zPosition;
-                double direction = (180 / Math.PI) * Math.Atan2(hitZ - zPosition, hitX - xPosition);
+                double direction = (180 / Math.PI) * Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
                 if (!(Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2))
                 {
                     hitX = -yPosition * xDirection / yDirection + xPosition;
@@ -274,19 +274,31 @@ namespace ProjektUppgift
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
         public void CalculateRatio(double localXPos, double localYPos, double angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition)
         {
-            double verticalAngle = Math.Atan2(localYPos * (imageScale - 1), 1) * 180 / Math.PI;
-            double horizontalAngle = Math.Atan2(localXPos * (imageScale - 1), 1) * 180 / Math.PI + angle;
-            double a = Math.Tan(verticalAngle * Math.PI / 180);
-            double c = Math.Tan(horizontalAngle * Math.PI / 180);
-            double a2 = a * a;
-            double c2 = c * c;
-            double d = c2 + a2 * (c2 + 1) + 1;
-            zDirection = Math.Sqrt(1 / d);
-            yDirection = a * Math.Sqrt(zDirection * zDirection * (c2 + 1));
-            xDirection = c * zDirection;
-            xPosition = localXPos * Math.Cos(angle) + playerPositionX;
-            zPosition = localXPos * Math.Sin(angle) + playerPositionZ;
-            yPosition = localYPos + playerPositionY;
+            double baseXPosition = localXPos * Math.Cos(angle * Math.PI / 180);
+            double baseZPosition = localXPos * -Math.Sin(angle * Math.PI / 180);
+            double baseYPosition = localYPos;
+            double projectedXPosition = Math.Sin(angle * Math.PI / 180) + baseXPosition * imageScale;
+            double projectedZPosition = Math.Cos(angle * Math.PI / 180) + baseZPosition * imageScale;
+            double projectedYPosition = baseYPosition * imageScale;
+            xDirection = projectedXPosition - baseXPosition;
+            yDirection = projectedYPosition - baseYPosition;
+            zDirection = projectedZPosition - baseZPosition;
+            xPosition = baseXPosition + playerPositionX;
+            yPosition = baseYPosition + playerPositionY;
+            zPosition = baseZPosition + playerPositionZ;
+            //double verticalAngle = Math.Atan2(localYPos * (imageScale - 1), 1) * 180 / Math.PI;
+            //double horizontalAngle = Math.Atan2(localXPos * (imageScale - 1), 1) * 180 / Math.PI + angle;
+            //double a = Math.Tan(verticalAngle * Math.PI / 180);
+            //double c = Math.Tan(horizontalAngle * Math.PI / 180);
+            //double a2 = a * a;
+            //double c2 = c * c;
+            //double d = c2 + a2 * (c2 + 1) + 1;
+            //zDirection = Math.Sqrt(1 / d);
+            //yDirection = a * Math.Sqrt(zDirection * zDirection * (c2 + 1));
+            //xDirection = c * zDirection;
+            //xPosition = localXPos * Math.Cos(angle * Math.PI / 180) + playerPositionX;
+            //zPosition = localXPos * Math.Sin(angle * Math.PI / 180) + playerPositionZ;
+            //yPosition = localYPos + playerPositionY;
         }
 
         //Kollar vilka knappar som trycks ned och flyttar eller roterar spelaren.
