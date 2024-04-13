@@ -37,7 +37,7 @@ Log :
 04/10 Kollade hur man kan sätta varje pixel på skärmen. Kollade på matematik som behövs.
 04/11 Gjorde så att spelaren befinner sig i ett litet rum. Det går nu att gå och titta runt, och väggarna har mönster. Det finns en viss "Fisheye" effekt, som gör att väggarna ser runda ut och större mot mitten av skärmen.
 04/12 Golv och tak har nu mönster.
-04/13 Fixade "Fisheye"-effekten. Det finns väggar inuti rummen och sänkte mängden lagg.
+04/13 Fixade "Fisheye"-effekten. Det kan nu finnas väggar inuti rummen och sänkte mängden lagg.
 
 */
 namespace ProjektUppgift
@@ -61,21 +61,25 @@ namespace ProjektUppgift
         //En två-dimensionell array med alla pixlar som kan ändras på.
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
         //"RoomCodes" är arrayer som beskriver hur rummen ska se ut. Beräkningar utförs senare för att generera rummen på ett sätt som fungerar med resten av koden.
-        int[,] testRoomCode = new int[,] { { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 1 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 } };
+        int[,] testRoomCode = new int[,] { { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 1 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 2, 0, 0 } };
+        int[,] currentRoomCode;
         //Vilken riktning spelaren tittar mot.
         double angle = 0;
         //Spelarens position.
         double playerPositionX = 1.5;
         double playerPositionY = 0.5;
         double playerPositionZ = 1.5;
+        double wallHitboxSize = 0.2;
         //Hur högt upp taket är.
         const double roomHeight = 1;
         Color roomColor = Color.DarkGreen;
         Color roomColorPattern = Color.DarkGray;
         Color roofColor = Color.DarkBlue;
         double lineSize = 0.1;
+        Graphics graphics;
         //Alla ytor som finns i det genererade rummet.
         List<Face> currentRoom = new List<Face>();
+        List<Object> objects = new List<Object>();
         int isWDown = 0;
         int isSDown = 0;
         int isADown = 0;
@@ -84,6 +88,7 @@ namespace ProjektUppgift
         public Form1()
         {
             InitializeComponent();
+            currentRoomCode = testRoomCode;
             pictureBox1.ClientSize = new Size(width, height);
             this.Size = new Size(width, height);
             //Genererar alla pixlar som behövs.
@@ -95,31 +100,49 @@ namespace ProjektUppgift
                 }
             }
             currentRoom = GenerateRoom(testRoomCode);
+            objects = GenerateObjects(testRoomCode);
+            graphics =  pictureBox1.CreateGraphics();
+        }
 
+        public List<Object> GenerateObjects(int[,] roomCode)
+        {
+            List<Object> objectsToReturn = new List<Object>();
+            for (int i = 0; i < roomCode.GetLength(0); i++)
+            {
+                for (int j = 0; j < roomCode.GetLength(1); j++)
+                {
+                    if (roomCode[i, j] >= 2)
+                    {
+                        Object tempObject = new Object(roomCode[i, j], i, j);
+                        objectsToReturn.Add(tempObject);
+                    }
+                }
+            }
+            return objectsToReturn;
         }
 
         //Metod som genererar rum utifrån en "RoomCode".
         private List<Face> GenerateRoom(int[,] roomCode)
         {
             List<Face> room = new List<Face>();
-            for(int i = 0; i < roomCode.GetLength(0);  i++)
+            for (int i = 0; i < roomCode.GetLength(0);  i++)
             {
-                if (roomCode[i, 0] == 0)
+                if (roomCode[i, 0] != 1)
                 {
                     room.Add(new Face(false, i, 0, i + 1, 0, Color.Yellow));
                 }
-                if (roomCode[i, roomCode.GetLength(1) - 1] == 0)
+                if (roomCode[i, roomCode.GetLength(1) - 1] != 1)
                 {
                     room.Add(new Face(false, i, roomCode.GetLength(1), i + 1, roomCode.GetLength(1), Color.Red));
                 }
             }
             for (int i = 0; i < roomCode.GetLength(1); i++)
             {
-                if (roomCode[0, i] == 0)
+                if (roomCode[0, i] != 1)
                 {
                     room.Add(new Face(true, 0, i, 0, i + 1, Color.Green));
                 }
-                if (roomCode[roomCode.GetLength(0) - 1, i] == 0)
+                if (roomCode[roomCode.GetLength(0) - 1, i] != 1)
                 {
                     room.Add(new Face(true, roomCode.GetLength(0), i, roomCode.GetLength(0), i + 1, Color.Purple));
                 }
@@ -210,8 +233,28 @@ namespace ProjektUppgift
                 double movementX = Math.Cos(movementDirection * Math.PI / 180);
                 double movementZ = Math.Sin(movementDirection * Math.PI / 180);
 
-                playerPositionX += movementX * playerSpeed;
-                playerPositionZ += movementZ * playerSpeed;
+                double newXPos = playerPositionX + movementX * playerSpeed;
+                double newZPos = playerPositionZ + movementZ * playerSpeed;
+
+                int playerGridPosX = (int)Math.Floor(playerPositionX);
+                int playerGridPosZ = (int)Math.Floor(playerPositionZ);
+                int newGridPosX = (int)Math.Floor(newXPos + wallHitboxSize * Math.Sign(movementX));
+                int newGridPosZ = (int)Math.Floor(newZPos + wallHitboxSize * Math.Sign(movementZ));
+
+                if ((!(newGridPosX >= currentRoomCode.GetLength(0))) && (!(newGridPosX < 0)))
+                {
+                    if (!(currentRoomCode[newGridPosX, playerGridPosZ] == 1))
+                    {
+                        playerPositionX = newXPos;
+                    }
+                }
+                if ((!(newGridPosZ >= currentRoomCode.GetLength(1))) && (!(newGridPosZ < 0)))
+                {
+                    if (!(currentRoomCode[playerGridPosX, newGridPosZ] == 1))
+                    {
+                        playerPositionZ = newZPos;
+                    }
+                }
             }
         }
 
@@ -228,6 +271,7 @@ namespace ProjektUppgift
                     bmp.SetPixel(i, j, color);
                 }
             }
+            //pictureBox1.Image = bmp;
             pictureBox1.Image = bmp;
         }
 
@@ -493,6 +537,28 @@ namespace ProjektUppgift
             midX = (HigherBoundX + LowerBoundX) / 2;
             midZ = (HigherBoundZ + LowerBoundZ) / 2;
             this.color = color;
+        }
+    }
+
+    public class Object
+    {
+        public Image image;
+        public double positionX;
+        public double positionZ;
+        public bool isEnemy;
+        public double height;
+
+        public Object(int type, double positionX, double positionZ)
+        {
+            this.positionX = positionX;
+            this.positionZ = positionZ;
+            switch (type)
+            {
+                case 2:
+                    image = Properties.Resources.CacodemonFrontBasicFixed;
+                    height = 0.8;
+                    break;
+            }
         }
     }
 }
