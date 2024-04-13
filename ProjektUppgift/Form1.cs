@@ -37,7 +37,7 @@ Log :
 04/10 Kollade hur man kan sätta varje pixel på skärmen. Kollade på matematik som behövs.
 04/11 Gjorde så att spelaren befinner sig i ett litet rum. Det går nu att gå och titta runt, och väggarna har mönster. Det finns en viss "Fisheye" effekt, som gör att väggarna ser runda ut och större mot mitten av skärmen.
 04/12 Golv och tak har nu mönster.
-04/13 Fixade "Fisheye"-effekten. Det kan nu finnas väggar inuti rummen och sänkte mängden lagg.
+04/13 Fixade "Fisheye"-effekten. Det kan nu finnas väggar inuti rummen och sänkte mängden lagg. Förbättrade koden.
 
 */
 namespace ProjektUppgift
@@ -64,7 +64,7 @@ namespace ProjektUppgift
         int[,] testRoomCode = new int[,] { { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 1 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 2, 0, 0 } };
         int[,] currentRoomCode;
         //Vilken riktning spelaren tittar mot.
-        double angle = 0;
+        double angle = Math.PI / 2;
         //Spelarens position.
         double playerPositionX = 1.5;
         double playerPositionY = 0.5;
@@ -224,14 +224,14 @@ namespace ProjektUppgift
 
         public void MovePlayer()
         {
-            double horizontal = isDDown - isADown;
+            double horizontal = isADown - isDDown;
             double vertical = isWDown - isSDown;
             if (!(horizontal == 0 && vertical == 0))
             {
-                double movementDirection = Math.Atan2(vertical, horizontal) * 180 / Math.PI - angle;
+                double movementDirection = Math.Atan2(horizontal, vertical) + angle;
 
-                double movementX = Math.Cos(movementDirection * Math.PI / 180);
-                double movementZ = Math.Sin(movementDirection * Math.PI / 180);
+                double movementX = Math.Cos(movementDirection);
+                double movementZ = Math.Sin(movementDirection);
 
                 double newXPos = playerPositionX + movementX * playerSpeed;
                 double newZPos = playerPositionZ + movementZ * playerSpeed;
@@ -309,8 +309,8 @@ namespace ProjektUppgift
                     if (face.isDirectionX)
                     {
                         double hitZ = (face.LowerBoundX - xPosition) * zDirection / xDirection + zPosition;
-                        double direction = (180 / Math.PI) * Math.Atan2(hitZ - playerPositionZ, face.LowerBoundX - playerPositionX);
-                        if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
+                        double direction = Math.Atan2(hitZ - playerPositionZ, face.LowerBoundX - playerPositionX);
+                        if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
                         {
                             if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
                             {
@@ -332,8 +332,8 @@ namespace ProjektUppgift
                     else
                     {
                         double hitX = (face.LowerBoundZ - zPosition) * xDirection / zDirection + xPosition;
-                        double direction = (180 / Math.PI) * Math.Atan2(face.LowerBoundZ - playerPositionZ, hitX - playerPositionX);
-                        if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
+                        double direction = Math.Atan2(face.LowerBoundZ - playerPositionZ, hitX - playerPositionX);
+                        if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
                         {
                             if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
                             {
@@ -387,8 +387,8 @@ namespace ProjektUppgift
                 {
                     double hitX = (roomHeight - yPosition) * xDirection / yDirection + xPosition;
                     double hitZ = (roomHeight - yPosition) * zDirection / yDirection + zPosition;
-                    double direction = (180 / Math.PI) * Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
-                    if (!(Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2))
+                    double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
+                    if (!(Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2))
                     {
                         hitX = -yPosition * xDirection / yDirection + xPosition;
                         hitZ = -yPosition * zDirection / yDirection + zPosition;
@@ -407,11 +407,11 @@ namespace ProjektUppgift
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
         public void CalculateRatio(double localXPos, double localYPos, double angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition)
         {
-            double baseXPosition = localXPos * Math.Cos(angle * Math.PI / 180);
-            double baseZPosition = localXPos * -Math.Sin(angle * Math.PI / 180);
+            double baseXPosition = localXPos * Math.Sin(angle);
+            double baseZPosition = localXPos * -Math.Cos(angle);
             double baseYPosition = localYPos;
-            double projectedXPosition = Math.Sin(angle * Math.PI / 180) + baseXPosition * imageScale;
-            double projectedZPosition = Math.Cos(angle * Math.PI / 180) + baseZPosition * imageScale;
+            double projectedXPosition = Math.Cos(angle) + baseXPosition * imageScale;
+            double projectedZPosition = Math.Sin(angle) + baseZPosition * imageScale;
             double projectedYPosition = baseYPosition * imageScale * imageScaleY;
             xDirection = projectedXPosition - baseXPosition;
             yDirection = projectedYPosition - baseYPosition;
@@ -455,12 +455,12 @@ namespace ProjektUppgift
             }
             if (e.KeyCode == Keys.Left)
             {
-                angle -= 10;
+                angle += Math.PI / 18;
                 fixAngle();
             }
             if (e.KeyCode == Keys.Right)
             {
-                angle += 10;
+                angle -= Math.PI / 18;
                 fixAngle();
             }
         }
@@ -468,13 +468,13 @@ namespace ProjektUppgift
         //Metod som ser till att vinkeln håller sig mellan -180 och 180.
         private void fixAngle()
         {
-            if (angle < -180) 
+            if (angle < 0) 
             {
-                angle += 360;
+                angle += 2 * Math.PI;
             }
-            else if (angle > 180)
+            else if (angle > Math.PI * 2)
             {
-                angle -= 360;
+                angle -= 2 * Math.PI;
             }
         }
 
