@@ -37,7 +37,7 @@ Log :
 04/10 Kollade hur man kan sätta varje pixel på skärmen. Kollade på matematik som behövs.
 04/11 Gjorde så att spelaren befinner sig i ett litet rum. Det går nu att gå och titta runt, och väggarna har mönster. Det finns en viss "Fisheye" effekt, som gör att väggarna ser runda ut och större mot mitten av skärmen.
 04/12 Golv och tak har nu mönster.
-04/13 Fixade "Fisheye"-effekten.
+04/13 Fixade "Fisheye"-effekten. Det finns väggar inuti rummen och sänkte mängden lagg.
 
 */
 namespace ProjektUppgift
@@ -241,10 +241,10 @@ namespace ProjektUppgift
         public List<Face> SimplifyRoom(List<Face> room)
         {
             List<Face> result = new List<Face>();
-            for (int i = 0; i < newWidth; i++) 
+            for (int i = 0; i < newWidth; i += 3) 
             {
                 Face face = CalculatePixel(pixels[i, newHeight / 2], room).Item2;
-                if (!result.Contains(face))
+                if ((!result.Contains(face)) && face != null)
                 {
                     result.Add(face);
                 }
