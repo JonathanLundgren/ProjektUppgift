@@ -36,6 +36,7 @@ Log :
 04/10 Kollade hur man kan sätta varje pixel på skärmen. Kollade på matematik som behövs.
 04/11 Gjorde så att spelaren befinner sig i ett litet rum. Det går nu att gå och titta runt, och väggarna har mönster. Det finns en viss "Fisheye" effekt, som gör att väggarna ser runda ut och större mot mitten av skärmen.
 04/12 Golv och tak har nu mönster.
+04/13 Fixade "Fisheye"-effekten.
 
 */
 namespace ProjektUppgift
@@ -47,8 +48,9 @@ namespace ProjektUppgift
         const int height = 800;
         //Hur hög upplösning det är. Mindre värde ger högre upplösning.
         const int resolution = 4;
-        double imageSize = 1;
-        double imageScale = 2;
+        double imageSize = 0.25;
+        double imageScale = 8;
+        double imageScaleY = 1.5;
         //I hur stor vinkel spelaren kan se.
         const int fovHorizontal = 120;
         const int fovVertical = 75;
@@ -279,7 +281,7 @@ namespace ProjektUppgift
             double baseYPosition = localYPos;
             double projectedXPosition = Math.Sin(angle * Math.PI / 180) + baseXPosition * imageScale;
             double projectedZPosition = Math.Cos(angle * Math.PI / 180) + baseZPosition * imageScale;
-            double projectedYPosition = baseYPosition * imageScale;
+            double projectedYPosition = baseYPosition * imageScale * imageScaleY;
             xDirection = projectedXPosition - baseXPosition;
             yDirection = projectedYPosition - baseYPosition;
             zDirection = projectedZPosition - baseZPosition;
