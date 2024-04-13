@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
@@ -60,7 +61,7 @@ namespace ProjektUppgift
         //En två-dimensionell array med alla pixlar som kan ändras på.
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
         //"RoomCodes" är arrayer som beskriver hur rummen ska se ut. Beräkningar utförs senare för att generera rummen på ett sätt som fungerar med resten av koden.
-        int[,] testRoomCode = new int[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+        int[,] testRoomCode = new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 1, 0, 1, 0, 0 }, { 1, 0, 1, 0, 0 }, { 1, 0, 0, 0, 0 }, { 1, 0, 1, 0, 0 }, { 1, 0, 1, 0, 0 } };
         //Vilken riktning spelaren tittar mot.
         double angle = 0;
         //Spelarens position.
@@ -122,6 +123,71 @@ namespace ProjektUppgift
                 {
                     room.Add(new Face(true, roomCode.GetLength(0), i, roomCode.GetLength(0), i + 1, Color.Purple));
                 }
+            }
+            for (int i = 0; i < roomCode.GetLength(0); i++)
+            {
+                for (int j = 0; j < roomCode.GetLength(1); j++)
+                {
+                    if (roomCode[i, j] == 1)
+                    {
+                        if (i > 0)
+                        {
+                            if (roomCode[i -1, j] != 1)
+                            {
+                                room.Add(new Face(true, i, j, i, j + 1, Color.DarkRed));
+                            }
+                        }
+                        if (i < roomCode.GetLength(0) - 1)
+                        {
+                            if (roomCode[i + 1, j] != 1)
+                            {
+                                room.Add(new Face(true, i + 1, j, i + 1, j + 1, Color.DarkRed));
+                            }
+                        }
+                        if (j > 0)
+                        {
+                            if (roomCode[i, j - 1] != 1)
+                            {
+                                room.Add(new Face(false, i, j, i + 1, j, Color.DarkRed));
+                            }
+                        }
+                        if (j < roomCode.GetLength(1) - 1)
+                        {
+                            if (roomCode[i, j + 1] != 1)
+                            {
+                                room.Add(new Face(false, i, j + 1, i + 1, j + 1, Color.DarkRed));
+                            }
+                        }
+                    }
+                }
+            }
+            int k = 0;
+            while (k < room.Count)
+            {
+                int l = k;
+                while (l < room.Count)
+                {
+                    //if (room[k].LowerBoundX == room[l].HigherBoundX && room[k].LowerBoundZ == room[l].HigherBoundZ && room[k].isDirectionX == room[l].isDirectionX)
+                    //{
+                    //    room[k].LowerBoundX = room[l].LowerBoundX;
+                    //    room[k].LowerBoundZ = room[l].LowerBoundZ;
+                    //    room.RemoveAt(l);
+                    //    l -= 1;
+                    //}
+                    if (room[l].LowerBoundX == room[k].HigherBoundX && room[l].LowerBoundZ == room[k].HigherBoundZ && room[k].isDirectionX == room[l].isDirectionX)
+                    {
+                        room[k].HigherBoundX = room[l].HigherBoundX;
+                        room[k].HigherBoundZ = room[l].HigherBoundZ;
+                        room.RemoveAt(l);
+                        if (l < k)
+                        {
+                            k -= 1;
+                        }
+                        l -= 1;
+                    }
+                    l++;
+                }
+                k++;
             }
             return room;
         }
@@ -186,11 +252,11 @@ namespace ProjektUppgift
                             double hitY = (face.LowerBoundX - xPosition) * yDirection / xDirection + yPosition;
                             if (0 <= hitY && hitY <= roomHeight)
                             {
-                                if (Math.Pow(face.midX - xPosition, 2) + Math.Pow(face.midZ - zPosition, 2) < proximity)
+                                if (Math.Pow(face.LowerBoundX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
                                 {
                                     currentClosest = face;
                                     color = face.color;
-                                    proximity = Math.Pow(face.midX - xPosition, 2) + Math.Pow(face.midZ - zPosition, 2);
+                                    proximity = Math.Pow(face.LowerBoundX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
                                     relativeHitFromLower = hitZ - face.LowerBoundZ;
                                     relativeHitY = hitY;
                                 }
@@ -209,11 +275,11 @@ namespace ProjektUppgift
                             double hitY = (face.LowerBoundZ - zPosition) * yDirection / zDirection + yPosition;
                             if (0 <= hitY && hitY <= roomHeight)
                             {
-                                if (Math.Pow(face.midX - xPosition, 2) + Math.Pow(face.midZ - zPosition, 2) < proximity)
+                                if (Math.Pow(hitX - xPosition, 2) + Math.Pow(face.LowerBoundZ - zPosition, 2) < proximity)
                                 {
                                     currentClosest = face;
                                     color = face.color;
-                                    proximity = Math.Pow(face.midX - xPosition, 2) + Math.Pow(face.midZ - zPosition, 2);
+                                    proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(face.LowerBoundZ - zPosition, 2);
                                     relativeHitFromLower = hitX - face.LowerBoundX;
                                     relativeHitY = hitY;
                                 }
@@ -271,6 +337,11 @@ namespace ProjektUppgift
                     return roofColor;
                 }
             }
+        }
+
+        public (Color, Face) CalculateLine(double xDirection, double yDirection, double zDirection, double xPosition, double yPosition, double zPosition)
+        {
+
         }
 
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
