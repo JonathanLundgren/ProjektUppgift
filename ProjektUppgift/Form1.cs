@@ -37,7 +37,7 @@ Log :
 04/10 Kollade hur man kan sätta varje pixel på skärmen. Kollade på matematik som behövs.
 04/11 Gjorde så att spelaren befinner sig i ett litet rum. Det går nu att gå och titta runt, och väggarna har mönster. Det finns en viss "Fisheye" effekt, som gör att väggarna ser runda ut och större mot mitten av skärmen.
 04/12 Golv och tak har nu mönster.
-04/13 Fixade "Fisheye"-effekten. Det kan nu finnas väggar inuti rummen och sänkte mängden lagg. Förbättrade koden.
+04/13 Fixade "Fisheye"-effekten. Det kan nu finnas väggar inuti rummen och sänkte mängden lagg. Förbättrade koden. Spelaren kan inte längre gå genom väggar.
 
 */
 namespace ProjektUppgift
@@ -52,9 +52,6 @@ namespace ProjektUppgift
         double imageSize = 0.25;
         double imageScale = 8;
         double imageScaleY = 1.5;
-        //I hur stor vinkel spelaren kan se.
-        const int fovHorizontal = 120;
-        const int fovVertical = 75;
         //Höjd och bredd som används för beräkningar.
         readonly int newWidth = width / resolution;
         readonly int newHeight = height / resolution;
@@ -76,7 +73,6 @@ namespace ProjektUppgift
         Color roomColorPattern = Color.DarkGray;
         Color roofColor = Color.DarkBlue;
         double lineSize = 0.1;
-        Graphics graphics;
         //Alla ytor som finns i det genererade rummet.
         List<Face> currentRoom = new List<Face>();
         List<Object> objects = new List<Object>();
@@ -101,7 +97,6 @@ namespace ProjektUppgift
             }
             currentRoom = GenerateRoom(testRoomCode);
             objects = GenerateObjects(testRoomCode);
-            graphics =  pictureBox1.CreateGraphics();
         }
 
         public List<Object> GenerateObjects(int[,] roomCode)
