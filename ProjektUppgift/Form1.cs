@@ -61,7 +61,7 @@ namespace ProjektUppgift
         //En två-dimensionell array med alla pixlar som kan ändras på.
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
         //"RoomCodes" är arrayer som beskriver hur rummen ska se ut. Beräkningar utförs senare för att generera rummen på ett sätt som fungerar med resten av koden.
-        int[,] testRoomCode = new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 1, 0, 1, 0, 0 }, { 1, 0, 1, 0, 0 }, { 1, 0, 0, 0, 0 }, { 1, 0, 1, 0, 0 }, { 1, 0, 1, 0, 0 } };
+        int[,] testRoomCode = new int[,] { { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 1 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 } };
         //Vilken riktning spelaren tittar mot.
         double angle = 0;
         //Spelarens position.
@@ -219,11 +219,12 @@ namespace ProjektUppgift
         public void UpdateImage()
         {
             Bitmap bmp = new Bitmap(newWidth, newHeight);
+            List<Face> simplifiedRoom = SimplifyRoom(currentRoom);
             for (int i = 0; i < newWidth; i++)
             {
                 for (int j = 0; j < newHeight; j++)
                 {
-                    Color color = CalculatePixel(pixels[i, j]);
+                    Color color = CalculatePixel(pixels[i, j], simplifiedRoom).Item1;
                     bmp.SetPixel(i, j, color);
                 }
             }
@@ -231,117 +232,132 @@ namespace ProjektUppgift
         }
 
         //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas.
-        public Color CalculatePixel(Pixel pixel)
+        public (Color, Face) CalculatePixel(Pixel pixel, List<Face> room)
         {
             CalculateRatio(pixel.xPos, pixel.yPos, angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition);
-            Face currentClosest = null;
-            double proximity = 10000;
-            double relativeHitFromLower = 0;
-            double relativeHitY = 0;
-            Color color = Color.Black;
-            foreach (Face face in currentRoom)
-            {
-                if (face.isDirectionX)
-                {
-                    double hitZ = (face.LowerBoundX - xPosition) * zDirection / xDirection + zPosition;
-                    double direction = (180 / Math.PI) * Math.Atan2(hitZ - playerPositionZ, face.LowerBoundX - playerPositionX);
-                    if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
-                    {
-                        if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
-                        {
-                            double hitY = (face.LowerBoundX - xPosition) * yDirection / xDirection + yPosition;
-                            if (0 <= hitY && hitY <= roomHeight)
-                            {
-                                if (Math.Pow(face.LowerBoundX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
-                                {
-                                    currentClosest = face;
-                                    color = face.color;
-                                    proximity = Math.Pow(face.LowerBoundX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
-                                    relativeHitFromLower = hitZ - face.LowerBoundZ;
-                                    relativeHitY = hitY;
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    double hitX = (face.LowerBoundZ - zPosition) * xDirection / zDirection + xPosition;
-                    double direction = (180 / Math.PI) * Math.Atan2(face.LowerBoundZ - playerPositionZ, hitX - playerPositionX);
-                    if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
-                    {
-                        if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
-                        {
-                            double hitY = (face.LowerBoundZ - zPosition) * yDirection / zDirection + yPosition;
-                            if (0 <= hitY && hitY <= roomHeight)
-                            {
-                                if (Math.Pow(hitX - xPosition, 2) + Math.Pow(face.LowerBoundZ - zPosition, 2) < proximity)
-                                {
-                                    currentClosest = face;
-                                    color = face.color;
-                                    proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(face.LowerBoundZ - zPosition, 2);
-                                    relativeHitFromLower = hitX - face.LowerBoundX;
-                                    relativeHitY = hitY;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            //Kod som gör olika mönster.
-            if (currentClosest != null)
-            {
-                if (currentClosest.isDirectionX)
-                {
-                    if (Math.Abs(relativeHitFromLower - currentClosest.LowerBoundZ) < lineSize || Math.Abs(currentClosest.HigherBoundZ - relativeHitFromLower) < lineSize)
-                    {
-                        return roomColorPattern;
-                    }
-                }
-                else
-                {
-                    if (Math.Abs(relativeHitFromLower - currentClosest.LowerBoundX) < lineSize || Math.Abs(currentClosest.HigherBoundX - relativeHitFromLower) < lineSize)
-                    {
-                        return roomColorPattern;
-                    }
-                }
-                if (Math.Abs(relativeHitY) < lineSize || Math.Abs(roomHeight - relativeHitY) < lineSize)
-                {
-                    return roomColorPattern;
-                }
-                else if (Math.Abs(relativeHitY - relativeHitFromLower) < lineSize || Math.Abs(roomHeight - relativeHitY - relativeHitFromLower) < lineSize)
-                {
-                    return roomColorPattern;
-                }
-                else
-                {
-                    return color;
-                }
-            }
-            else
-            {
-                double hitX = (roomHeight - yPosition) * xDirection / yDirection + xPosition;
-                double hitZ = (roomHeight - yPosition) * zDirection / yDirection + zPosition;
-                double direction = (180 / Math.PI) * Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
-                if (!(Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2))
-                {
-                    hitX = -yPosition * xDirection / yDirection + xPosition;
-                    hitZ = -yPosition * zDirection / yDirection + zPosition;
-                }
-                if (Math.Abs(Math.Round(hitX) - hitX) <= lineSize || Math.Abs(Math.Round(hitZ) - hitZ) <= lineSize)
-                {
-                    return roomColorPattern;
-                }
-                else
-                {
-                    return roofColor;
-                }
-            }
+            return CalculateLine(xDirection, yDirection, zDirection, xPosition, yPosition, zPosition, room);
         }
 
-        public (Color, Face) CalculateLine(double xDirection, double yDirection, double zDirection, double xPosition, double yPosition, double zPosition)
+        public List<Face> SimplifyRoom(List<Face> room)
         {
+            List<Face> result = new List<Face>();
+            for (int i = 0; i < newWidth; i++) 
+            {
+                Face face = CalculatePixel(pixels[i, newHeight / 2], room).Item2;
+                if (!result.Contains(face))
+                {
+                    result.Add(face);
+                }
+            }
+            return result;
+        }
+            
 
+        public (Color, Face) CalculateLine(double xDirection, double yDirection, double zDirection, double xPosition, double yPosition, double zPosition, List<Face> faces)
+        {
+                Face currentClosest = null;
+                double proximity = 10000;
+                double relativeHitFromLower = 0;
+                double relativeHitY = 0;
+                Color color = Color.Black;
+                foreach (Face face in faces)
+                {
+                    if (face.isDirectionX)
+                    {
+                        double hitZ = (face.LowerBoundX - xPosition) * zDirection / xDirection + zPosition;
+                        double direction = (180 / Math.PI) * Math.Atan2(hitZ - playerPositionZ, face.LowerBoundX - playerPositionX);
+                        if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
+                        {
+                            if (face.LowerBoundZ <= hitZ && hitZ <= face.HigherBoundZ)
+                            {
+                                double hitY = (face.LowerBoundX - xPosition) * yDirection / xDirection + yPosition;
+                                if (0 <= hitY && hitY <= roomHeight)
+                                {
+                                    if (Math.Pow(face.LowerBoundX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
+                                    {
+                                        currentClosest = face;
+                                        color = face.color;
+                                        proximity = Math.Pow(face.LowerBoundX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
+                                        relativeHitFromLower = hitZ - face.LowerBoundZ;
+                                        relativeHitY = hitY;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        double hitX = (face.LowerBoundZ - zPosition) * xDirection / zDirection + xPosition;
+                        double direction = (180 / Math.PI) * Math.Atan2(face.LowerBoundZ - playerPositionZ, hitX - playerPositionX);
+                        if (Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2)
+                        {
+                            if (face.LowerBoundX <= hitX && hitX <= face.HigherBoundX)
+                            {
+                                double hitY = (face.LowerBoundZ - zPosition) * yDirection / zDirection + yPosition;
+                                if (0 <= hitY && hitY <= roomHeight)
+                                {
+                                    if (Math.Pow(hitX - xPosition, 2) + Math.Pow(face.LowerBoundZ - zPosition, 2) < proximity)
+                                    {
+                                        currentClosest = face;
+                                        color = face.color;
+                                        proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(face.LowerBoundZ - zPosition, 2);
+                                        relativeHitFromLower = hitX - face.LowerBoundX;
+                                        relativeHitY = hitY;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                //Kod som gör olika mönster.
+                if (currentClosest != null)
+                {
+                    if (currentClosest.isDirectionX)
+                    {
+                        if (Math.Abs(relativeHitFromLower - currentClosest.LowerBoundZ) < lineSize || Math.Abs(currentClosest.HigherBoundZ - relativeHitFromLower) < lineSize)
+                        {
+                            return (roomColorPattern, currentClosest);
+                        }
+                    }
+                    else
+                    {
+                        if (Math.Abs(relativeHitFromLower - currentClosest.LowerBoundX) < lineSize || Math.Abs(currentClosest.HigherBoundX - relativeHitFromLower) < lineSize)
+                        {
+                            return (roomColorPattern, currentClosest);
+                        }
+                    }
+                    if (Math.Abs(relativeHitY) < lineSize || Math.Abs(roomHeight - relativeHitY) < lineSize)
+                    {
+                        return (roomColorPattern, currentClosest);
+                    }
+                    else if (Math.Abs(relativeHitY - relativeHitFromLower) < lineSize || Math.Abs(roomHeight - relativeHitY - relativeHitFromLower) < lineSize)
+                    {
+                        return (roomColorPattern, currentClosest);
+                    }
+                    else
+                    {
+                        return (color, currentClosest);
+                    }
+                }
+                else
+                {
+                    double hitX = (roomHeight - yPosition) * xDirection / yDirection + xPosition;
+                    double hitZ = (roomHeight - yPosition) * zDirection / yDirection + zPosition;
+                    double direction = (180 / Math.PI) * Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
+                    if (!(Math.Abs(direction + angle - 90) < fovHorizontal / 2 || Math.Abs(direction + 360 + angle - 90) < fovHorizontal / 2))
+                    {
+                        hitX = -yPosition * xDirection / yDirection + xPosition;
+                        hitZ = -yPosition * zDirection / yDirection + zPosition;
+                    }
+                    if (Math.Abs(Math.Round(hitX) - hitX) <= lineSize || Math.Abs(Math.Round(hitZ) - hitZ) <= lineSize)
+                    {
+                        return (roomColorPattern, currentClosest);
+                    }
+                    else
+                    {
+                        return (roofColor, currentClosest);
+                    }
+                }
         }
 
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
