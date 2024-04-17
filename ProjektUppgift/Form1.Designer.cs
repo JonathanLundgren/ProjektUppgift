@@ -29,47 +29,46 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.gameTimer = new System.Windows.Forms.Timer(this.components);
+            this.gameScreen = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.gameScreen)).BeginInit();
             this.SuspendLayout();
             // 
-            // timer1
+            // gameTimer
             // 
-            this.timer1.Enabled = true;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            this.gameTimer.Tick += new System.EventHandler(this.gameTimer_Tick);
             // 
-            // pictureBox1
+            // gameScreen
             // 
-            this.pictureBox1.InitialImage = null;
-            this.pictureBox1.Location = new System.Drawing.Point(0, 0);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(500, 500);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 0;
-            this.pictureBox1.TabStop = false;
+            this.gameScreen.InitialImage = null;
+            this.gameScreen.Location = new System.Drawing.Point(0, 0);
+            this.gameScreen.Name = "gameScreen";
+            this.gameScreen.Size = new System.Drawing.Size(500, 500);
+            this.gameScreen.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.gameScreen.TabIndex = 0;
+            this.gameScreen.TabStop = false;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(2084, 761);
-            this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.gameScreen);
             this.KeyPreview = true;
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyUp);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gameScreen)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Timer timer1;
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Timer gameTimer;
+        private System.Windows.Forms.PictureBox gameScreen;
     }
 }
 

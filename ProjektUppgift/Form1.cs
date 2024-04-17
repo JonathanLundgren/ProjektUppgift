@@ -21,12 +21,17 @@ av Jonathan Lundgren vårterminen 2024
 
 Kravspec: 
 
+När programmet startas ska en meny där man kan välja bana dyka upp.
+Varje bana ska bestå av flera rum, med ett sätt att gå mellan rummen.
 Spelaren ska kunna röra sig fram- och baklänges eller i sidled, och snurra runt.
 Mönster ska finnas på väggar, golv och tak.
 Fiender som anfaller spelaren ska finnas i banan.
-spelaren ska kunna anfalla fiender.
+Fienderna ska finnas i färgerna grön, gul och röd beroende på svårighetsgrad.
+Vissa fiender ska sitta fast i golvet och andra ska kunna röra på sig.
+Spelaren ska kunna anfalla fiender.
+När spelaren träffar fienderna ska en effekt spelas.
 Det ska finnas power-ups utspridda i banan.
-spelaren ska ha ett HUD som visar liv och power-ups.
+Spelaren ska ha ett HUD som visar liv och power-ups.
 Spelaren ska inte kunna gå genom väggar.
 
 Om jag hinner:
@@ -38,6 +43,7 @@ Log :
 04/11 Gjorde så att spelaren befinner sig i ett litet rum. Det går nu att gå och titta runt, och väggarna har mönster. Det finns en viss "Fisheye" effekt, som gör att väggarna ser runda ut och större mot mitten av skärmen.
 04/12 Golv och tak har nu mönster.
 04/13 Fixade "Fisheye"-effekten. Det kan nu finnas väggar inuti rummen och sänkte mängden lagg. Förbättrade koden. Spelaren kan inte längre gå genom väggar.
+04/17 Gjorde början till en meny.
 
 */
 namespace ProjektUppgift
@@ -58,14 +64,35 @@ namespace ProjektUppgift
         //En två-dimensionell array med alla pixlar som kan ändras på.
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
         //"RoomCodes" är arrayer som beskriver hur rummen ska se ut. Beräkningar utförs senare för att generera rummen på ett sätt som fungerar med resten av koden.
+        public Level[] levels = new Level[]
+        {
+            new Level
+            (
+                "Level 1",
+                new int[,] { { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 1 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 10, 0, 0 } },
+                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } },
+                null,
+                null,
+                null
+            ),
+            new Level
+            (
+                "Level 2",
+                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } },
+                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } },
+                null,
+                null,
+                null
+            )
+        };
         int[,] testRoomCode = new int[,] { { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 1 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 2, 0, 0 } };
         int[,] currentRoomCode;
         //Vilken riktning spelaren tittar mot.
-        double angle = Math.PI / 2;
+        double angle = 0;
         //Spelarens position.
-        double playerPositionX = 1.5;
+        double playerPositionX = 0.5;
         double playerPositionY = 0.5;
-        double playerPositionZ = 1.5;
+        double playerPositionZ = 0.5;
         double wallHitboxSize = 0.2;
         //Hur högt upp taket är.
         const double roomHeight = 1;
@@ -81,12 +108,14 @@ namespace ProjektUppgift
         int isADown = 0;
         int isDDown = 0;
         double playerSpeed = 0.1;
+        bool isGameActive = false;
+        List<ButtonData> buttons = new List<ButtonData>();
         public Form1()
         {
             InitializeComponent();
             currentRoomCode = testRoomCode;
-            pictureBox1.ClientSize = new Size(width, height);
-            this.Size = new Size(width, height);
+            gameScreen.ClientSize = new Size(width, height);
+            Size = new Size(width, height);
             //Genererar alla pixlar som behövs.
             for (int i = 0; i < newWidth; i++) 
             {
@@ -95,8 +124,60 @@ namespace ProjektUppgift
                     pixels[i, j] = new Pixel(imageSize * (i - (newWidth / 2)) / newWidth, imageSize * (j -(newHeight / 2)) / newWidth);
                 }
             }
-            currentRoom = GenerateRoom(testRoomCode);
-            objects = GenerateObjects(testRoomCode);
+            //StartRoom(testRoomCode);
+            CreateStartButtons();
+            gameScreen.Hide();
+        }
+
+        public void CreateStartButtons()
+        {
+            RemoveButtons();
+            ButtonData tempButton = new ButtonData(0, 0, this);
+            tempButton.button = new Button();
+            tempButton.button.Text = "Start Game";
+            tempButton.button.Location = new Point(0, 0);
+            tempButton.button.Click += tempButton.OnClick;
+            Controls.Add(tempButton.button);
+            buttons.Add(tempButton);
+        }
+
+        public void CreateLevelButtons()
+        {
+            RemoveButtons();
+            for (int i = 0; i < levels.Length; i++)
+            {
+                ButtonData tempButton = new ButtonData(i, 1, this);
+                tempButton.button = new Button();
+                tempButton.button.Text = levels[i].name;
+                tempButton.button.Location = new Point(0, (int)(25d * i));
+                tempButton.button.Click += tempButton.OnClick;
+                Controls.Add(tempButton.button);
+                buttons.Add(tempButton);
+            }
+        }
+
+        public void RemoveButtons()
+        {
+            foreach (ButtonData button in buttons)
+            {
+                button.button.Dispose();
+            }
+            buttons.Clear();
+        }
+
+        public void StartLevel(Level level)
+        {
+            RemoveButtons();
+            gameScreen.Show();
+            isGameActive = true;
+            gameTimer.Start();
+            StartRoom(level.room1);
+        }
+
+        public void StartRoom(int[,] roomCode)
+        {
+            currentRoom = GenerateRoom(roomCode);
+            objects = GenerateObjects(roomCode);
         }
 
         public List<Object> GenerateObjects(int[,] roomCode)
@@ -211,7 +292,7 @@ namespace ProjektUppgift
         }
 
         //En timer används för att generera nästa frame.
-        private void timer1_Tick(object sender, EventArgs e)
+        private void gameTimer_Tick(object sender, EventArgs e)
         {
             UpdateImage();
             MovePlayer();
@@ -267,7 +348,7 @@ namespace ProjektUppgift
                 }
             }
             //pictureBox1.Image = bmp;
-            pictureBox1.Image = bmp;
+            gameScreen.Image = bmp;
         }
 
         //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas.
@@ -549,9 +630,54 @@ namespace ProjektUppgift
             this.positionZ = positionZ;
             switch (type)
             {
-                case 2:
-                    image = Properties.Resources.CacodemonFrontBasicFixed;
-                    height = 0.8;
+                case 10:
+                    break;
+            }
+        }
+    }
+
+    public class Level
+    {
+        public string name;
+        public int[,] room1;
+        public int[,] room2;
+        public int[,] room3;
+        public int[,] room4;
+        public int[,] room5;
+        public Level(string name, int[,] room1, int[,] room2, int[,] room3, int[,] room4, int[,] room5)
+        {
+            this.name = name;
+            this.room1 = room1;
+            this.room2 = room2;
+            this.room3 = room3;
+            this.room4 = room4;
+            this.room5 = room5;
+        }
+    }
+
+    public class ButtonData
+    {
+        public int id;
+        public int type;
+        public Form1 main;
+        public Button button;
+
+        public ButtonData(int id, int type, Form1 main)
+        {
+            this.id = id;
+            this.type = type;
+            this.main = main;
+        }
+
+        public void OnClick(object sender, EventArgs e)
+        {
+            switch (type)
+            {
+                case 0:
+                    main.CreateLevelButtons();
+                    break;
+                case 1:
+                    main.StartLevel(main.levels[id]);
                     break;
             }
         }
