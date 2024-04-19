@@ -45,6 +45,7 @@ Log :
 04/12 Golv och tak har nu mönster.
 04/13 Fixade "Fisheye"-effekten. Det kan nu finnas väggar inuti rummen och sänkte mängden lagg. Förbättrade koden. Spelaren kan inte längre gå genom väggar.
 04/17 Gjorde början till en meny.
+04/19 Refaktoriserade en del av koden.
 
 */
 namespace ProjektUppgift
@@ -262,27 +263,27 @@ namespace ProjektUppgift
                     }
                 }
             }
-            //int k = 0;
-            //while (k < room.Count)
-            //{
-            //    int l = k;
-            //    while (l < room.Count)
-            //    {
-            //        if (room[l].lowerBoundX == room[k].higherBoundX && room[l].lowerBoundZ == room[k].higherBoundZ && room[k].direction == room[l].direction)
-            //        {
-            //            room[k].higherBoundX = room[l].higherBoundX;
-            //            room[k].higherBoundZ = room[l].higherBoundZ;
-            //            room.RemoveAt(l);
-            //            if (l < k)
-            //            {
-            //                k -= 1;
-            //            }
-            //            l -= 1;
-            //        }
-            //        l++;
-            //    }
-            //    k++;
-            //}
+            int k = 0;
+            while (k < room.Count)
+            {
+                int l = k;
+                while (l < room.Count)
+                {
+                    if (room[l].x1 == room[k].x2 && room[l].z1 == room[k].z2 && room[k].direction == room[l].direction)
+                    {
+                        room[k].x2 = room[l].x2;
+                        room[k].z2 = room[l].z2;
+                        room.RemoveAt(l);
+                        if (l < k)
+                        {
+                            k -= 1;
+                        }
+                        l -= 1;
+                    }
+                    l++;
+                }
+                k++;
+            }
             return room;
         }
 
@@ -375,25 +376,24 @@ namespace ProjektUppgift
             double relativeHitFromLower = 0;
             double relativeHitY = 0;
             double hitX;
+            double hitY;
             double hitZ;
             Color color = Color.Black;
 
-            void AfterXY(Face face)
+            void AfterXYZ(Face face)
             {
-
-                double hitY = (yDirection / xDirection) * (hitX - xPosition) + yPosition;
-                if (hitY <= face.higherBoundY && hitY >= face.lowerBoundY)
+                if (hitY <= face.y2 && hitY >= face.y1)
                 {
                     double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
-                    if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
+                    if (Math.Abs(direction - angle) <= Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) <= Math.PI / 2)
                     {
                         if (Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
                         {
                             currentClosest = face;
                             color = face.color;
                             proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
-                            relativeHitFromLower = Math.Sqrt(Math.Pow(hitX - face.lowerBoundX, 2) + Math.Pow(hitZ - face.lowerBoundZ, 2));
-                            relativeHitY = hitY - face.lowerBoundY;
+                            relativeHitFromLower = Math.Sqrt((hitX - face.x1) * (hitX - face.x1) + (hitZ - face.z1) * (hitZ - face.z1));
+                            relativeHitY = hitY - face.y1;
                         }
                     }
                 }
@@ -405,31 +405,70 @@ namespace ProjektUppgift
                 {
 
                 }
-                else if (xDirection == 0)
+                else if (Math.Abs(xDirection) <= 0.00001d)
                 {
-                    hitZ = (face.lowerBoundX - (face.zxRatio * face.lowerBoundZ) - (xPosition - (xDirection / zDirection * zPosition))) / ((xDirection / zDirection) - face.zxRatio);
-                    if (hitZ <= face.higherBoundZ && hitZ >= face.lowerBoundZ)
+                    //MessageBox.Show("BBBBBBBBBBBB");
+                    if (face.zxRatio <= 0.01d && face.zxRatio >= -0.01d)
                     {
-                        hitX = (hitZ * (xDirection / zDirection) + xPosition) - ((xDirection / zDirection) * zPosition);
-                        if (hitX <= face.higherBoundX + 0.01d && hitX >= face.lowerBoundX - 0.01d)
+                        //MessageBox.Show("AAAAAAAAAAAAAA");
+                        hitX = xPosition;
+                        if (hitX <= face.x2 && hitX >= face.x1)
                         {
-                            AfterXY(face);
+                            hitZ = face.z1;
+                            hitY = (yDirection / zDirection) * (hitZ - zPosition) + yPosition;
+                            AfterXYZ(face);
+                        }
+                    }
+                    else
+                    {
+                        hitZ = (face.x1 - ((1 / face.zxRatio) * face.z1) - (xPosition - (xDirection / zDirection * zPosition))) / ((xDirection / zDirection) - (1 / face.zxRatio));
+                        if (hitZ <= face.z2 && hitZ >= face.z1)
+                        {
+                            hitX = (hitZ * (xDirection / zDirection) + xPosition) - ((xDirection / zDirection) * zPosition);
+                            if (hitX <= face.x2 + 0.01d && hitX >= face.x1 - 0.01d)
+                            {
+                                hitY = (yDirection / zDirection) * (hitZ - zPosition) + yPosition;
+                                AfterXYZ(face);
+                            }
                         }
                     }
                 }
-                //else if (face.direction == 0 || face.direction == Math.PI)
-                //{
-
-                //}
+                else if (face.x1 == face.x2)
+                {
+                    if (Math.Abs(zDirection) <= 0.00001d)
+                    {
+                        hitX = face.x1;
+                        hitZ = zPosition;
+                        if (hitZ <= face.z2 && hitZ >= face.z1)
+                        {
+                            hitY = (yDirection / xDirection) * (hitX - xPosition) + yPosition;
+                            AfterXYZ(face);
+                        }
+                    }
+                    else
+                    {
+                        hitZ = (face.x1 - ((0 / face.zxRatio) * face.z1) - (xPosition - (xDirection / zDirection * zPosition))) / ((xDirection / zDirection) - (0 / face.zxRatio));
+                        if (hitZ <= face.z2 && hitZ >= face.z1)
+                        {
+                            hitX = (hitZ * (xDirection / zDirection) + xPosition) - ((xDirection / zDirection) * zPosition);
+                            if (hitX <= face.x2 + 0.01d && hitX >= face.x1 - 0.01d)
+                            {
+                                hitY = (yDirection / zDirection) * (hitZ - zPosition) + yPosition;
+                                AfterXYZ(face);
+                            }
+                        }
+                    }
+                }
                 else
                 {
-                    hitX = (face.lowerBoundZ - ((1 / face.zxRatio) * face.lowerBoundX) - (zPosition - (zDirection / xDirection * xPosition))) / ((zDirection / xDirection) - (1 / face.zxRatio));
-                    if (hitX <= face.higherBoundX && hitX >= face.lowerBoundX)
+                    hitX = (face.z1 - (face.zxRatio * face.x1) - (zPosition - (zDirection / xDirection * xPosition))) / ((zDirection / xDirection) - face.zxRatio);
+                    if (hitX <= face.x2 && hitX >= face.x1)
                     {
                         hitZ = (hitX * (zDirection / xDirection) + zPosition) - ((zDirection / xDirection) * xPosition);
-                        if (hitZ <= face.higherBoundZ + 0.01d && hitZ >= face.lowerBoundZ - 0.01d)
+                        if (hitZ <= face.z2 + 0.01d && hitZ >= face.z1 - 0.01d)
                         {
-                            AfterXY(face);
+                            hitY = (yDirection / xDirection) * (hitX - xPosition) + yPosition;
+                            AfterXYZ(face);
                         }
                     }
                 }
@@ -439,21 +478,21 @@ namespace ProjektUppgift
                 //x = (c - a) / (b - d)
                 //if (face.isDirectionX)
                 //{
-                //    double hitZ = (face.lowerBoundX - xPosition) * zDirection / xDirection + zPosition;
-                //    double direction = Math.Atan2(hitZ - playerPositionZ, face.lowerBoundX - playerPositionX);
+                //    double hitZ = (face.x1 - xPosition) * zDirection / xDirection + zPosition;
+                //    double direction = Math.Atan2(hitZ - playerPositionZ, face.x1 - playerPositionX);
                 //    if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
                 //    {
-                //        if (face.lowerBoundZ <= hitZ && hitZ <= face.higherBoundZ)
+                //        if (face.z1 <= hitZ && hitZ <= face.z2)
                 //        {
-                //            double hitY = (face.lowerBoundX - xPosition) * yDirection / xDirection + yPosition;
+                //            double hitY = (face.x1 - xPosition) * yDirection / xDirection + yPosition;
                 //            if (0 <= hitY && hitY <= roomHeight)
                 //            {
-                //                if (Math.Pow(face.lowerBoundX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
+                //                if (Math.Pow(face.x1 - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
                 //                {
                 //                    currentClosest = face;
                 //                    color = face.color;
-                //                    proximity = Math.Pow(face.lowerBoundX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
-                //                    relativeHitFromLower = hitZ - face.lowerBoundZ;
+                //                    proximity = Math.Pow(face.x1 - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
+                //                    relativeHitFromLower = hitZ - face.z1;
                 //                    relativeHitY = hitY;
                 //                }
                 //            }
@@ -462,21 +501,21 @@ namespace ProjektUppgift
                 //}
                 //else
                 //{
-                //    double hitX = (face.lowerBoundZ - zPosition) * xDirection / zDirection + xPosition;
-                //    double direction = Math.Atan2(face.lowerBoundZ - playerPositionZ, hitX - playerPositionX);
+                //    double hitX = (face.z1 - zPosition) * xDirection / zDirection + xPosition;
+                //    double direction = Math.Atan2(face.z1 - playerPositionZ, hitX - playerPositionX);
                 //    if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
                 //    {
-                //        if (face.lowerBoundX <= hitX && hitX <= face.higherBoundX)
+                //        if (face.x1 <= hitX && hitX <= face.x2)
                 //        {
-                //            double hitY = (face.lowerBoundZ - zPosition) * yDirection / zDirection + yPosition;
+                //            double hitY = (face.z1 - zPosition) * yDirection / zDirection + yPosition;
                 //            if (0 <= hitY && hitY <= roomHeight)
                 //            {
-                //                if (Math.Pow(hitX - xPosition, 2) + Math.Pow(face.lowerBoundZ - zPosition, 2) < proximity)
+                //                if (Math.Pow(hitX - xPosition, 2) + Math.Pow(face.z1 - zPosition, 2) < proximity)
                 //                {
                 //                    currentClosest = face;
                 //                    color = face.color;
-                //                    proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(face.lowerBoundZ - zPosition, 2);
-                //                    relativeHitFromLower = hitX - face.lowerBoundX;
+                //                    proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(face.z1 - zPosition, 2);
+                //                    relativeHitFromLower = hitX - face.x1;
                 //                    relativeHitY = hitY;
                 //                }
                 //            }
@@ -489,12 +528,12 @@ namespace ProjektUppgift
             {
                 //if (currentClosest.isDirectionX)
                 //{
-                //if (Math.Abs(relativeHitFromLower - currentClosest.lowerBoundZ) < lineSize || Math.Abs(currentClosest.higherBoundZ - relativeHitFromLower) < lineSize)
+                //if (Math.Abs(relativeHitFromLower - currentClosest.z1) < lineSize || Math.Abs(currentClosest.z2 - relativeHitFromLower) < lineSize)
                 //{
                 //return (roomColorPattern, currentClosest);
                 //}
                 //}
-                if (Math.Abs(relativeHitFromLower - currentClosest.lowerBoundX) < lineSize || Math.Abs(currentClosest.higherBoundX - relativeHitFromLower) < lineSize)
+                if (Math.Abs(relativeHitFromLower) < lineSize || Math.Abs(1 - relativeHitFromLower) < lineSize)
                 {
                     return (roomColorPattern, currentClosest);
                 }
@@ -647,36 +686,36 @@ namespace ProjektUppgift
     public class Face
     {
         public double direction;
-        public double lowerBoundX;
-        public double lowerBoundY;
-        public double lowerBoundZ;
-        public double higherBoundX;
-        public double higherBoundY;
-        public double higherBoundZ;
+        public double x1;
+        public double y1;
+        public double z1;
+        public double x2;
+        public double y2;
+        public double z2;
         public double midX;
         public double midZ;
         public Color color;
         public double zxRatio;
 
-        public Face(double direction, double lowerBoundX, double lowerBoundY, double lowerBoundZ, double higherBoundX, double higherBoundY, double higherBoundZ, Color color)
+        public Face(double direction, double x1, double y1, double z1, double x2, double y2, double z2, Color color)
         {
             this.direction = direction;
-            this.lowerBoundX = lowerBoundX;
-            this.lowerBoundY = lowerBoundY;
-            this.lowerBoundZ = lowerBoundZ;
-            this.higherBoundX = higherBoundX;
-            this.higherBoundY = higherBoundY;
-            this.higherBoundZ = higherBoundZ;
-            midX = (higherBoundX + lowerBoundX) / 2;
-            midZ = (higherBoundZ + lowerBoundZ) / 2;
+            this.x1 = x1;
+            this.y1 = y1;
+            this.z1 = z1;
+            this.x2 = x2;
+            this.y2 = y2;
+            this.z2 = z2;
+            midX = (x2 + x1) / 2;
+            midZ = (z2 + z1) / 2;
             this.color = color;
-            if (higherBoundX == lowerBoundX)
+            if (x2 == x1)
             {
-                zxRatio = 0;
+                zxRatio = 1;
             }
             else
             {
-                zxRatio = (higherBoundZ - lowerBoundZ) / (higherBoundX - lowerBoundX);
+                zxRatio = (z2 - z1) / (x2 - x1);
             }
         }
     }
