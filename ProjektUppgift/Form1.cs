@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -172,6 +173,7 @@ namespace ProjektUppgift
             isGameActive = true;
             gameTimer.Start();
             StartRoom(level.room1);
+            currentRoomCode = level.room1;
         }
 
         public void StartRoom(int[,] roomCode)
@@ -372,12 +374,48 @@ namespace ProjektUppgift
             double proximity = 10000;
             double relativeHitFromLower = 0;
             double relativeHitY = 0;
+            double hitX;
+            double hitZ;
             Color color = Color.Black;
+
+            void AfterXY(Face face)
+            {
+
+                double hitY = (yDirection / xDirection) * (hitX - xPosition) + yPosition;
+                if (hitY <= face.higherBoundY && hitY >= face.lowerBoundY)
+                {
+                    double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
+                    if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
+                    {
+                        if (Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
+                        {
+                            currentClosest = face;
+                            color = face.color;
+                            proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
+                            relativeHitFromLower = Math.Sqrt(Math.Pow(hitX - face.lowerBoundX, 2) + Math.Pow(hitZ - face.lowerBoundZ, 2));
+                            relativeHitY = hitY - face.lowerBoundY;
+                        }
+                    }
+                }
+            }
+
             foreach (Face face in faces)
             {
-                if ((zDirection == face.zxRatio * xDirection) || xDirection == 0)
+                if (zDirection == face.zxRatio * xDirection)
                 {
 
+                }
+                else if (xDirection == 0)
+                {
+                    hitZ = (face.lowerBoundX - (face.zxRatio * face.lowerBoundZ) - (xPosition - (xDirection / zDirection * zPosition))) / ((xDirection / zDirection) - face.zxRatio);
+                    if (hitZ <= face.higherBoundZ && hitZ >= face.lowerBoundZ)
+                    {
+                        hitX = (hitZ * (xDirection / zDirection) + xPosition) - ((xDirection / zDirection) * zPosition);
+                        if (hitX <= face.higherBoundX + 0.01d && hitX >= face.lowerBoundX - 0.01d)
+                        {
+                            AfterXY(face);
+                        }
+                    }
                 }
                 //else if (face.direction == 0 || face.direction == Math.PI)
                 //{
@@ -385,28 +423,13 @@ namespace ProjektUppgift
                 //}
                 else
                 {
-                    double hitX = (face.lowerBoundZ - zPosition) / ((zDirection / xDirection) - face.zxRatio);
+                    hitX = (face.lowerBoundZ - ((1 / face.zxRatio) * face.lowerBoundX) - (zPosition - (zDirection / xDirection * xPosition))) / ((zDirection / xDirection) - (1 / face.zxRatio));
                     if (hitX <= face.higherBoundX && hitX >= face.lowerBoundX)
                     {
-                        double hitZ = (hitX - face.lowerBoundX) * face.zxRatio + face.lowerBoundX + zPosition;
-                        if (hitZ <= face.higherBoundZ && hitZ >= face.lowerBoundZ)
+                        hitZ = (hitX * (zDirection / xDirection) + zPosition) - ((zDirection / xDirection) * xPosition);
+                        if (hitZ <= face.higherBoundZ + 0.01d && hitZ >= face.lowerBoundZ - 0.01d)
                         {
-                            double hitY = (yDirection / xDirection) * (hitX - xPosition) + yPosition;
-                            if (hitY <= face.higherBoundY && hitY >= face.lowerBoundY)
-                            {
-                                double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
-                                if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
-                                {
-                                    if (Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
-                                    {
-                                        currentClosest = face;
-                                        color = face.color;
-                                        proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
-                                        relativeHitFromLower = Math.Sqrt(Math.Pow(hitX - face.lowerBoundX, 2) + Math.Pow(hitZ - face.lowerBoundZ, 2));
-                                        relativeHitY = hitY - face.lowerBoundY;
-                                    }
-                                }
-                            }
+                            AfterXY(face);
                         }
                     }
                 }
@@ -466,14 +489,14 @@ namespace ProjektUppgift
             {
                 //if (currentClosest.isDirectionX)
                 //{
-                    //if (Math.Abs(relativeHitFromLower - currentClosest.lowerBoundZ) < lineSize || Math.Abs(currentClosest.higherBoundZ - relativeHitFromLower) < lineSize)
-                    //{
-                        //return (roomColorPattern, currentClosest);
-                    //}
+                //if (Math.Abs(relativeHitFromLower - currentClosest.lowerBoundZ) < lineSize || Math.Abs(currentClosest.higherBoundZ - relativeHitFromLower) < lineSize)
+                //{
+                //return (roomColorPattern, currentClosest);
+                //}
                 //}
                 if (Math.Abs(relativeHitFromLower - currentClosest.lowerBoundX) < lineSize || Math.Abs(currentClosest.higherBoundX - relativeHitFromLower) < lineSize)
                 {
-                        return (roomColorPattern, currentClosest);
+                    return (roomColorPattern, currentClosest);
                 }
                 if (Math.Abs(relativeHitY) < lineSize || Math.Abs(roomHeight - relativeHitY) < lineSize)
                 {
@@ -490,8 +513,8 @@ namespace ProjektUppgift
             }
             else
             {
-                double hitX = (roomHeight - yPosition) * xDirection / yDirection + xPosition;
-                double hitZ = (roomHeight - yPosition) * zDirection / yDirection + zPosition;
+                hitX = (roomHeight - yPosition) * xDirection / yDirection + xPosition;
+                hitZ = (roomHeight - yPosition) * zDirection / yDirection + zPosition;
                 double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
                 if (!(Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2))
                 {
