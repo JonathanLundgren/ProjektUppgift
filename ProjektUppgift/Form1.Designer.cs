@@ -40,21 +40,24 @@
             // 
             // gameScreen
             // 
+            this.gameScreen.ErrorImage = null;
             this.gameScreen.InitialImage = null;
             this.gameScreen.Location = new System.Drawing.Point(0, 0);
+            this.gameScreen.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.gameScreen.Name = "gameScreen";
-            this.gameScreen.Size = new System.Drawing.Size(500, 500);
+            this.gameScreen.Size = new System.Drawing.Size(667, 615);
             this.gameScreen.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.gameScreen.TabIndex = 0;
             this.gameScreen.TabStop = false;
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(2084, 761);
+            this.ClientSize = new System.Drawing.Size(1924, 937);
             this.Controls.Add(this.gameScreen);
             this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";

@@ -46,6 +46,7 @@ Log :
 04/13 Fixade "Fisheye"-effekten. Det kan nu finnas väggar inuti rummen och sänkte mängden lagg. Förbättrade koden. Spelaren kan inte längre gå genom väggar.
 04/17 Gjorde början till en meny.
 04/19 Refaktoriserade en del av koden.
+04/24 Uppdaterade systemet som används för att göra mönster på väggarna.
 
 */
 namespace ProjektUppgift
@@ -112,6 +113,7 @@ namespace ProjektUppgift
         double playerSpeed = 0.1;
         bool isGameActive = false;
         List<ButtonData> buttons = new List<ButtonData>();
+        public Picture colorPatternWall1 = new Picture(Properties.Resources.R);
         public Form1()
         {
             InitializeComponent();
@@ -208,22 +210,22 @@ namespace ProjektUppgift
             {
                 if (roomCode[i, 0] != 1)
                 {
-                    room.Add(new Face(Math.PI / 2, i, 0, 0, i + 1, roomHeight, 0, Color.Yellow));
+                    room.Add(new Face(Math.PI / 2, i, 0, 0, i + 1, roomHeight, 0, colorPatternWall1));
                 }
                 if (roomCode[i, roomCode.GetLength(1) - 1] != 1)
                 {
-                    room.Add(new Face(Math.PI * 1.5, i, 0, roomCode.GetLength(1), i + 1, roomHeight, roomCode.GetLength(1), Color.Red));
+                    room.Add(new Face(Math.PI * 1.5, i, 0, roomCode.GetLength(1), i + 1, roomHeight, roomCode.GetLength(1), colorPatternWall1));
                 }
             }
             for (int i = 0; i < roomCode.GetLength(1); i++)
             {
                 if (roomCode[0, i] != 1)
                 {
-                    room.Add(new Face(0, 0, 0, i, 0, roomHeight, i + 1, Color.Green));
+                    room.Add(new Face(0, 0, 0, i, 0, roomHeight, i + 1, colorPatternWall1));
                 }
                 if (roomCode[roomCode.GetLength(0) - 1, i] != 1)
                 {
-                    room.Add(new Face(Math.PI, roomCode.GetLength(0), 0, i, roomCode.GetLength(0), roomHeight, i + 1, Color.Purple));
+                    room.Add(new Face(Math.PI, roomCode.GetLength(0), 0, i, roomCode.GetLength(0), roomHeight, i + 1, colorPatternWall1));
                 }
             }
             for (int i = 0; i < roomCode.GetLength(0); i++)
@@ -236,28 +238,28 @@ namespace ProjektUppgift
                         {
                             if (roomCode[i - 1, j] != 1)
                             {
-                                room.Add(new Face(Math.PI, i, 0, j, i, roomHeight, j + 1, Color.DarkRed));
+                                room.Add(new Face(Math.PI, i, 0, j, i, roomHeight, j + 1, colorPatternWall1));
                             }
                         }
                         if (i < roomCode.GetLength(0) - 1)
                         {
                             if (roomCode[i + 1, j] != 1)
                             {
-                                room.Add(new Face(0, i + 1, 0, j, i + 1, roomHeight, j + 1, Color.DarkRed));
+                                room.Add(new Face(0, i + 1, 0, j, i + 1, roomHeight, j + 1, colorPatternWall1));
                             }
                         }
                         if (j > 0)
                         {
                             if (roomCode[i, j - 1] != 1)
                             {
-                                room.Add(new Face(Math.PI * 1.5, i, 0, j, i + 1, roomHeight, j, Color.DarkRed));
+                                room.Add(new Face(Math.PI * 1.5, i, 0, j, i + 1, roomHeight, j, colorPatternWall1));
                             }
                         }
                         if (j < roomCode.GetLength(1) - 1)
                         {
                             if (roomCode[i, j + 1] != 1)
                             {
-                                room.Add(new Face(Math.PI / 2, i, 0, j + 1, i + 1, roomHeight, j + 1, Color.DarkRed));
+                                room.Add(new Face(Math.PI / 2, i, 0, j + 1, i + 1, roomHeight, j + 1, colorPatternWall1));
                             }
                         }
                     }
@@ -390,7 +392,6 @@ namespace ProjektUppgift
                         if (Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
                         {
                             currentClosest = face;
-                            color = face.color;
                             proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
                             relativeHitFromLower = Math.Sqrt((hitX - face.x1) * (hitX - face.x1) + (hitZ - face.z1) * (hitZ - face.z1));
                             relativeHitY = hitY - face.y1;
@@ -526,6 +527,12 @@ namespace ProjektUppgift
             //Kod som gör olika mönster.
             if (currentClosest != null)
             {
+                double patternX = relativeHitFromLower % currentClosest.length;
+                double patternY = relativeHitY % currentClosest.height;
+                int pixelX = (int)(currentClosest.picture.pattern.GetLength(0) * patternX / currentClosest.length);
+                int pixelY = (int)(currentClosest.picture.pattern.GetLength(1) * patternY / currentClosest.height);
+                int colorIndex = currentClosest.picture.pattern[pixelX, pixelY];
+                return (currentClosest.picture.colors[colorIndex], currentClosest);
                 //if (currentClosest.isDirectionX)
                 //{
                 //if (Math.Abs(relativeHitFromLower - currentClosest.z1) < lineSize || Math.Abs(currentClosest.z2 - relativeHitFromLower) < lineSize)
@@ -533,22 +540,22 @@ namespace ProjektUppgift
                 //return (roomColorPattern, currentClosest);
                 //}
                 //}
-                if (Math.Abs(relativeHitFromLower) < lineSize || Math.Abs(1 - relativeHitFromLower) < lineSize)
-                {
-                    return (roomColorPattern, currentClosest);
-                }
-                if (Math.Abs(relativeHitY) < lineSize || Math.Abs(roomHeight - relativeHitY) < lineSize)
-                {
-                    return (roomColorPattern, currentClosest);
-                }
-                else if (Math.Abs(relativeHitY - relativeHitFromLower) < lineSize || Math.Abs(roomHeight - relativeHitY - relativeHitFromLower) < lineSize)
-                {
-                    return (roomColorPattern, currentClosest);
-                }
-                else
-                {
-                    return (color, currentClosest);
-                }
+                //if (Math.Abs(patternX) < lineSize || Math.Abs(1 - patternX) < lineSize)
+                //{
+                //    return (roomColorPattern, currentClosest);
+                //}
+                //if (Math.Abs(patternY) < lineSize || Math.Abs(roomHeight - patternY) < lineSize)
+                //{
+                //    return (roomColorPattern, currentClosest);
+                //}
+                //else if (Math.Abs(patternY - patternX) < lineSize || Math.Abs(roomHeight - patternY - patternX) < lineSize)
+                //{
+                //    return (roomColorPattern, currentClosest);
+                //}
+                //else
+                //{
+                //    return (color, currentClosest);
+                //}
             }
             else
             {
@@ -694,10 +701,12 @@ namespace ProjektUppgift
         public double z2;
         public double midX;
         public double midZ;
-        public Color color;
         public double zxRatio;
+        public double length;
+        public double height;
+        public Picture picture;
 
-        public Face(double direction, double x1, double y1, double z1, double x2, double y2, double z2, Color color)
+        public Face(double direction, double x1, double y1, double z1, double x2, double y2, double z2, Picture picture)
         {
             this.direction = direction;
             this.x1 = x1;
@@ -708,7 +717,7 @@ namespace ProjektUppgift
             this.z2 = z2;
             midX = (x2 + x1) / 2;
             midZ = (z2 + z1) / 2;
-            this.color = color;
+            this.picture = picture;
             if (x2 == x1)
             {
                 zxRatio = 1;
@@ -717,6 +726,8 @@ namespace ProjektUppgift
             {
                 zxRatio = (z2 - z1) / (x2 - x1);
             }
+            length = Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(z2 - z1, 2));
+            height = y2 - y1;
         }
     }
 
@@ -759,13 +770,34 @@ namespace ProjektUppgift
         }
     }
 
+    public class Picture
+    {
+        public List<Color> colors = new List<Color>();
+        public int[,] pattern;
+        public Picture(Bitmap baseImage)
+        {
+            pattern = new int[baseImage.Width, baseImage.Height];
+            for (int i = 0; i < baseImage.Width; i++)
+            {
+                for (int j = 0; j < baseImage.Height; j++)
+                {
+                    Color color = baseImage.GetPixel(i, j);
+                    if (!colors.Contains(color))
+                    {
+                        colors.Add(color);
+                    }
+                    pattern[i, j] = colors.IndexOf(color);
+                }
+            }
+        }
+    }
+
     public class ButtonData
     {
         public int id;
         public int type;
         public Form1 main;
         public Button button;
-
         public ButtonData(int id, int type, Form1 main)
         {
             this.id = id;

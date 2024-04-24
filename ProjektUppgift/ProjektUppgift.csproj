@@ -83,5 +83,8 @@
   <ItemGroup>
     <None Include="Resources\CacodemonFrontBasicFixed.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\R.jpg" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
