@@ -47,6 +47,7 @@ Log :
 04/17 Gjorde början till en meny.
 04/19 Refaktoriserade en del av koden.
 04/24 Uppdaterade systemet som används för att göra mönster på väggarna.
+04/26 Golv och Tak använder nu också det uppdaterade systemet. Påbörjade system för fiender.
 
 */
 namespace ProjektUppgift
@@ -91,20 +92,20 @@ namespace ProjektUppgift
         int[,] testRoomCode = new int[,] { { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 1 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 2, 0, 0 } };
         int[,] currentRoomCode;
         //Vilken riktning spelaren tittar mot.
-        double angle = 0;
+        public double angle = 0;
         //Spelarens position.
-        double playerPositionX = 0.5;
-        double playerPositionY = 0.5;
-        double playerPositionZ = 0.5;
+        public double playerPositionX = 0.5;
+        public double playerPositionY = 0.5;
+        public double playerPositionZ = 0.5;
         double wallHitboxSize = 0.2;
         //Hur högt upp taket är.
-        const double roomHeight = 1;
+        public const double roomHeight = 1;
         Color roomColor = Color.DarkGreen;
         Color roomColorPattern = Color.DarkGray;
         Color roofColor = Color.DarkBlue;
         double lineSize = 0.1;
         //Alla ytor som finns i det genererade rummet.
-        List<Face> currentRoom = new List<Face>();
+        public List<Face> currentRoom = new List<Face>();
         List<Object> objects = new List<Object>();
         int isWDown = 0;
         int isSDown = 0;
@@ -113,7 +114,9 @@ namespace ProjektUppgift
         double playerSpeed = 0.1;
         bool isGameActive = false;
         List<ButtonData> buttons = new List<ButtonData>();
-        public Picture colorPatternWall1 = new Picture(Properties.Resources.R);
+        public Picture colorPatternWall1 = new Picture(Properties.Resources.Wall_1);
+        public Picture colorPatternRoof1 = new Picture(Properties.Resources.Wall_1);
+        public Picture colorPatternFloor1 = new Picture(Properties.Resources.Wall_1);
         public Form1()
         {
             InitializeComponent();
@@ -153,7 +156,7 @@ namespace ProjektUppgift
                 ButtonData tempButton = new ButtonData(i, 1, this);
                 tempButton.button = new Button();
                 tempButton.button.Text = levels[i].name;
-                tempButton.button.Location = new Point(0, (int)(25d * i));
+                tempButton.button.Location = new Point(0, 25 * i);
                 tempButton.button.Click += tempButton.OnClick;
                 Controls.Add(tempButton.button);
                 buttons.Add(tempButton);
@@ -561,20 +564,33 @@ namespace ProjektUppgift
             {
                 hitX = (roomHeight - yPosition) * xDirection / yDirection + xPosition;
                 hitZ = (roomHeight - yPosition) * zDirection / yDirection + zPosition;
+                Picture pattern = colorPatternRoof1;
                 double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
                 if (!(Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2))
                 {
                     hitX = -yPosition * xDirection / yDirection + xPosition;
                     hitZ = -yPosition * zDirection / yDirection + zPosition;
+                    pattern = colorPatternFloor1;
                 }
-                if (Math.Abs(Math.Round(hitX) - hitX) <= lineSize || Math.Abs(Math.Round(hitZ) - hitZ) <= lineSize)
+                if (Math.Abs(hitX) == double.PositiveInfinity)
                 {
-                    return (roomColorPattern, currentClosest);
+                    hitX = 0;
+                    hitZ = 0;
                 }
-                else
-                {
-                    return (roofColor, currentClosest);
-                }
+                double patternX = Math.Abs(hitX) % 1;
+                double patternY = Math.Abs(hitZ) % 1;
+                int pixelX = (int)((pattern.pattern.GetLength(0) - 1) * patternX);
+                int pixelY = (int)((pattern.pattern.GetLength(1) - 1) * patternY);
+                int colorIndex = pattern.pattern[pixelX, pixelY];
+                return (pattern.colors[colorIndex], currentClosest);
+                //if (Math.Abs(Math.Round(hitX) - hitX) <= lineSize || Math.Abs(Math.Round(hitZ) - hitZ) <= lineSize)
+                //{
+                //    return (roomColorPattern, currentClosest);
+                //}
+                //else
+                //{
+                //    return (roofColor, currentClosest);
+                //}
             }
         }
 
@@ -736,18 +752,42 @@ namespace ProjektUppgift
         public Image image;
         public double positionX;
         public double positionZ;
+        public double angle = 0;
+        public int difficulty;
         public bool isEnemy;
-        public double height;
+        public bool isImmobile;
+        public Form1 main;
 
-        public Object(int type, double positionX, double positionZ)
+        public Object(int type, double positionX, double positionZ, Form1 main)
         {
             this.positionX = positionX;
             this.positionZ = positionZ;
             switch (type)
             {
                 case 10:
+                    difficulty = 1;
+                    isEnemy = true;
+                    isImmobile = true;
                     break;
             }
+
+            this.main = main;
+        }
+
+        public void Move()
+        {
+            if (isEnemy)
+            {
+                if (main.CalculateLine(main.playerPositionX - positionX, 0, main.playerPositionZ - positionZ, positionX, Form1.roomHeight / 2, positionZ, main.currentRoom).Item2 != null)
+                {
+                    
+                }
+            }
+        }
+
+        public Face[] GetFaces()
+        {
+
         }
     }
 
