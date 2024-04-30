@@ -48,6 +48,7 @@ Log :
 04/19 Refaktoriserade en del av koden.
 04/24 Uppdaterade systemet som används för att göra mönster på väggarna.
 04/26 Golv och Tak använder nu också det uppdaterade systemet. Påbörjade system för fiender.
+04/30 Påbörjade rendring av fiender.
 
 */
 namespace ProjektUppgift
@@ -82,7 +83,7 @@ namespace ProjektUppgift
             new Level
             (
                 "Level 2",
-                new int[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } },
+                new int[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 10, 0 } },
                 new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } },
                 null,
                 null,
@@ -115,8 +116,8 @@ namespace ProjektUppgift
         bool isGameActive = false;
         List<ButtonData> buttons = new List<ButtonData>();
         public Picture colorPatternWall1 = new Picture(Properties.Resources.Wall_1);
-        public Picture colorPatternRoof1 = new Picture(Properties.Resources.Wall_1);
-        public Picture colorPatternFloor1 = new Picture(Properties.Resources.Wall_1);
+        public Picture colorPatternRoof1 = new Picture(Properties.Resources.Roof1);
+        public Picture colorPatternFloor1 = new Picture(Properties.Resources.Floor1);
         public Form1()
         {
             InitializeComponent();
@@ -197,7 +198,7 @@ namespace ProjektUppgift
                 {
                     if (roomCode[i, j] >= 2)
                     {
-                        Object tempObject = new Object(roomCode[i, j], i, j);
+                        Object tempObject = new Object(roomCode[i, j], i, j, this);
                         objectsToReturn.Add(tempObject);
                     }
                 }
@@ -340,6 +341,13 @@ namespace ProjektUppgift
         {
             Bitmap bmp = new Bitmap(newWidth, newHeight);
             List<Face> simplifiedRoom = SimplifyRoom(currentRoom);
+            foreach (Object o in objects)
+            {
+                foreach (Face face in o.GetFaces())
+                {
+                    simplifiedRoom.Add(face);
+                }
+            }
             for (int i = 0; i < newWidth; i++)
             {
                 for (int j = 0; j < newHeight; j++)
@@ -740,7 +748,7 @@ namespace ProjektUppgift
             }
             else
             {
-                zxRatio = (z2 - z1) / (x2 - x1);
+                zxRatio = (z2 - z1) / Math.Abs(x2 - x1);
             }
             length = Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(z2 - z1, 2));
             height = y2 - y1;
@@ -749,7 +757,6 @@ namespace ProjektUppgift
 
     public class Object
     {
-        public Image image;
         public double positionX;
         public double positionZ;
         public double angle = 0;
@@ -760,8 +767,8 @@ namespace ProjektUppgift
 
         public Object(int type, double positionX, double positionZ, Form1 main)
         {
-            this.positionX = positionX;
-            this.positionZ = positionZ;
+            this.positionX = positionX + 0.5;
+            this.positionZ = positionZ + 0.5;
             switch (type)
             {
                 case 10:
@@ -787,7 +794,35 @@ namespace ProjektUppgift
 
         public Face[] GetFaces()
         {
+            if (isEnemy)
+            {
+                switch (difficulty)
+                {
+                    case 1:
+                        return GenerateCuboid(positionX, 0.5, positionZ, 0.5, 0.5, angle, new Picture[] { main.colorPatternFloor1, main.colorPatternRoof1, main.colorPatternWall1, main.colorPatternRoof1 });
+                }
+            }
+            return null;
+        }
 
+        public Face[] GenerateCuboid(double xPos, double yPos, double zPos, double height, double length, double angle, Picture[] pictures)
+        {
+            Face[] toReturn = new Face[4];
+            for (int i = 0; i < 4; i++)
+            {
+                double relativeXPosition1 = (Math.Cos(angle) + Math.Sin(angle)) * 0.5 * length; //1  //1  //-1
+                double relativeZPosition1 = (Math.Sin(angle) - Math.Cos(angle)) * 0.5 * length; //-1 //1  //1
+                double relativeXPosition2 = (Math.Cos(angle) - Math.Sin(angle)) * 0.5 * length; //1  //-1 //-1
+                double relativeZPosition2 = (Math.Sin(angle) + Math.Cos(angle)) * 0.5 * length; //1  //1  //-1
+
+                toReturn[i] = new Face(angle, relativeXPosition1 + xPos, yPos - 0.5 * height, relativeZPosition1 + zPos, relativeXPosition2 + xPos, yPos + 0.5 * height, relativeZPosition2 + zPos, pictures[i]);
+                angle += Math.PI / 2;
+                if (angle >= Math.PI * 2)
+                {
+                    angle -= Math.PI * 2;
+                }
+            }
+            return toReturn;
         }
     }
 
