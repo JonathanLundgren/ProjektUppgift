@@ -61,7 +61,7 @@ namespace ProjektUppgift
         const int width = 1200;
         const int height = 800;
         //Hur hög upplösning det är. Mindre värde ger högre upplösning.
-        const int resolution = 4;
+        const int resolution = 1;
         double imageSize = 0.25;
         double imageScale = 8;
         double imageScaleY = 1.5;
@@ -281,6 +281,7 @@ namespace ProjektUppgift
                     {
                         room[k].x2 = room[l].x2;
                         room[k].z2 = room[l].z2;
+                        room[k].SetValues();
                         room.RemoveAt(l);
                         if (l < k)
                         {
@@ -300,6 +301,15 @@ namespace ProjektUppgift
         {
             UpdateImage();
             MovePlayer();
+            MoveObjects();
+        }
+
+        public void MoveObjects()
+        {
+            foreach (Object obj in objects)
+            {
+                obj.Move();
+            }
         }
 
         public void MovePlayer()
@@ -350,9 +360,10 @@ namespace ProjektUppgift
                     simplifiedRoom.Add(face);
                 }
             }
-            for (int i = 0; i < newWidth; i++)
+            for (int i = 0; i < newWidth; i += 2)
             {
-                for (int j = 0; j < newHeight; j++)
+                Color[] colors = new Color[newHeight];
+                for (int j = 0; j < newHeight; j += 2)
                 {
                     Color color = CalculatePixel(pixels[i, j], simplifiedRoom).Item1;
                     bmp.SetPixel(i, j, color);
@@ -461,11 +472,11 @@ namespace ProjektUppgift
                     }
                     else
                     {
-                        hitZ = (face.x1 - ((0 / face.zxRatio) * face.z1) - (xPosition - (xDirection / zDirection * zPosition))) / ((xDirection / zDirection) - (0 / face.zxRatio));
-                        if (hitZ <= face.z2 && hitZ >= face.z1)
+                        hitZ = (face.lowerX - (xPosition - (xDirection / zDirection * zPosition))) / ((xDirection / zDirection));
+                        if (hitZ <= face.UpperZ && hitZ >= face.lowerZ)
                         {
                             hitX = (hitZ * (xDirection / zDirection) + xPosition) - ((xDirection / zDirection) * zPosition);
-                            if (hitX <= face.x2 + 0.01d && hitX >= face.x1 - 0.01d)
+                            if (hitX <= face.UpperX + 0.01d && hitX >= face.lowerX - 0.01d)
                             {
                                 hitY = (yDirection / zDirection) * (hitZ - zPosition) + yPosition;
                                 AfterXYZ(face);
@@ -756,10 +767,15 @@ namespace ProjektUppgift
             }
             else
             {
-                zxRatio = (z2 - z1) / Math.Abs(x2 - x1);
+                zxRatio = (z2 - z1) / (x2 - x1);
             }
             length = Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(z2 - z1, 2));
             height = y2 - y1;
+            SetValues();
+        }
+        
+        public void SetValues()
+        {
             if (x1 < x2)
             {
                 lowerX = x1;
@@ -822,6 +838,7 @@ namespace ProjektUppgift
                     
                 }
             }
+            angle += Math.PI / 128;
         }
 
         public Face[] GetFaces()
