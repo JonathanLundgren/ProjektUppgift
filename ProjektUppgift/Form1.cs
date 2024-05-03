@@ -116,10 +116,12 @@ namespace ProjektUppgift
         int isDDown = 0;
         double playerSpeed = 0.1;
         bool isGameActive = false;
+        bool controlCursor = false;
         List<ButtonData> buttons = new List<ButtonData>();
         public Picture colorPatternWall1 = new Picture(Properties.Resources.Wall_1);
         public Picture colorPatternRoof1 = new Picture(Properties.Resources.Roof1);
         public Picture colorPatternFloor1 = new Picture(Properties.Resources.Floor1);
+
         public Form1()
         {
             InitializeComponent();
@@ -141,6 +143,7 @@ namespace ProjektUppgift
 
         public void CreateStartButtons()
         {
+            ReleaseCursor();
             RemoveButtons();
             ButtonData tempButton = new ButtonData(0, 0, this);
             tempButton.button = new Button();
@@ -177,6 +180,7 @@ namespace ProjektUppgift
 
         public void StartLevel(Level level)
         {
+            FixCursor();
             RemoveButtons();
             gameScreen.Show();
             isGameActive = true;
@@ -302,8 +306,6 @@ namespace ProjektUppgift
             UpdateImage();
             MovePlayer();
             MoveObjects();
-            Cursor.Position = new Point(Location.X, Location.Y);
-            Cursor.Hide();
         }
 
         public void MoveObjects()
@@ -726,16 +728,49 @@ namespace ProjektUppgift
                 angle -= Math.PI / 18;
                 fixAngle();
             }
+            if (e.KeyCode == Keys.Escape)
+            {
+                if (controlCursor)
+                {
+                    ReleaseCursor();
+                }
+                else
+                {
+                    FixCursor();
+                }
+            }
+        }
+
+        bool isCursorHidden = false;
+        private void FixCursor()
+        {
+            Cursor.Clip = new Rectangle(Bounds.X + 30, Bounds.Y + 50, Bounds.Width - 60, Bounds.Height - 80);
+            controlCursor = true;
+            if (!isCursorHidden)
+            {
+                Cursor.Hide();
+                isCursorHidden = true;
+            }
+        }
+        private void ReleaseCursor()
+        {
+            Cursor.Clip = Rectangle.Empty;
+            controlCursor = false;
+            if (isCursorHidden)
+            {
+                Cursor.Show();
+                isCursorHidden = false;
+            }
         }
 
         //Metod som ser till att vinkeln håller sig mellan -180 och 180.
         private void fixAngle()
         {
-            if (angle < 0)
+            while (angle < 0)
             {
                 angle += 2 * Math.PI;
             }
-            else if (angle > Math.PI * 2)
+            while (angle > Math.PI * 2)
             {
                 angle -= 2 * Math.PI;
             }
@@ -758,6 +793,16 @@ namespace ProjektUppgift
             if (e.KeyCode == Keys.A)
             {
                 isADown = 0;
+            }
+        }
+
+        private void Form1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (controlCursor)
+            {
+                angle -= ((double)Cursor.Position.X - Location.X - width / 2) / 300;
+                fixAngle();
+                Cursor.Position = new Point(Location.X + width / 2, Location.Y + height / 2);
             }
         }
     }

@@ -49,12 +49,14 @@
             this.gameScreen.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.gameScreen.TabIndex = 0;
             this.gameScreen.TabStop = false;
+            this.gameScreen.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseMove);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1443, 761);
+            this.ControlBox = false;
             this.Controls.Add(this.gameScreen);
             this.KeyPreview = true;
             this.Name = "Form1";
@@ -62,6 +64,7 @@
             this.Text = "Form1";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyUp);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseMove);
             ((System.ComponentModel.ISupportInitialize)(this.gameScreen)).EndInit();
             this.ResumeLayout(false);
 
