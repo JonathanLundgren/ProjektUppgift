@@ -28,7 +28,7 @@ Spelaren ska kunna röra sig fram- och baklänges eller i sidled, och snurra run
 Mönster ska finnas på väggar, golv och tak.
 Fiender som anfaller spelaren ska finnas i banan.
 Fienderna ska finnas i färgerna grön, gul och röd beroende på svårighetsgrad.
-Vissa fiender ska sitta fast i golvet och andra ska kunna röra på sig.
+Finderna ska sitta fast i golvet.
 Spelaren ska kunna anfalla fiender.
 När spelaren träffar fienderna ska en effekt spelas.
 Det ska finnas power-ups utspridda i banan.
@@ -36,6 +36,7 @@ Spelaren ska ha ett HUD som visar liv och power-ups.
 Spelaren ska inte kunna gå genom väggar.
 
 Om jag hinner:
+Fiender som rör på sig.
 Fler banor, och ett läge där man kan designa egna banor.
 Oändligt läge?
 
