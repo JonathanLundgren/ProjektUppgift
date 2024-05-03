@@ -50,6 +50,7 @@ Log :
 04/24 Uppdaterade systemet som används för att göra mönster på väggarna.
 04/26 Golv och Tak använder nu också det uppdaterade systemet. Påbörjade system för fiender.
 04/30 Påbörjade rendring av fiender.
+05/03 Påbörjade fix av rendrings-bugg.
 
 */
 namespace ProjektUppgift
@@ -474,11 +475,11 @@ namespace ProjektUppgift
                 }
                 else
                 {
-                    hitX = (face.z1 - (face.zxRatio * face.x1) - (zPosition - (zDirection / xDirection * xPosition))) / ((zDirection / xDirection) - face.zxRatio);
-                    if (hitX <= face.x2 && hitX >= face.x1)
+                    hitX = (face.lowerZ - (face.zxRatio * face.LowerZX) - (zPosition - (zDirection / xDirection * xPosition))) / ((zDirection / xDirection) - face.zxRatio);
+                    if (hitX <= face.UpperX && hitX >= face.lowerX)
                     {
                         hitZ = (hitX * (zDirection / xDirection) + zPosition) - ((zDirection / xDirection) * xPosition);
-                        if (hitZ <= face.z2 + 0.01d && hitZ >= face.z1 - 0.01d)
+                        if (hitZ <= face.UpperZ + 0.01d && hitZ >= face.lowerZ - 0.01d)
                         {
                             hitY = (yDirection / xDirection) * (hitX - xPosition) + yPosition;
                             AfterXYZ(face);
@@ -724,6 +725,12 @@ namespace ProjektUppgift
         public double x2;
         public double y2;
         public double z2;
+        public double lowerX;
+        public double lowerZ;
+        public double LowerXZ;
+        public double LowerZX;
+        public double UpperX;
+        public double UpperZ;
         public double midX;
         public double midZ;
         public double zxRatio;
@@ -753,6 +760,30 @@ namespace ProjektUppgift
             }
             length = Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(z2 - z1, 2));
             height = y2 - y1;
+            if (x1 < x2)
+            {
+                lowerX = x1;
+                LowerXZ = z1;
+                UpperX = x2;
+            }
+            else
+            {
+                lowerX = x2;
+                LowerXZ = z2;
+                UpperX = x1;
+            }
+            if (z1 < z2)
+            {
+                lowerZ = z1;
+                LowerZX = x1;
+                UpperZ = z2;
+            }
+            else
+            {
+                lowerZ = z2;
+                LowerZX = x2;
+                UpperZ = z1;
+            }
         }
     }
 
