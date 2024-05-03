@@ -61,7 +61,7 @@ namespace ProjektUppgift
         const int width = 1200;
         const int height = 800;
         //Hur hög upplösning det är. Mindre värde ger högre upplösning.
-        const int resolution = 1;
+        const int resolution = 4;
         double imageSize = 0.25;
         double imageScale = 8;
         double imageScaleY = 1.5;
@@ -302,6 +302,8 @@ namespace ProjektUppgift
             UpdateImage();
             MovePlayer();
             MoveObjects();
+            Cursor.Position = new Point(Location.X, Location.Y);
+            Cursor.Hide();
         }
 
         public void MoveObjects()
@@ -360,14 +362,64 @@ namespace ProjektUppgift
                     simplifiedRoom.Add(face);
                 }
             }
-            for (int i = 0; i < newWidth; i += 2)
+            //Color[] previouslayer = null;
+            for (int i = 0; i < newWidth; i ++)
             {
-                Color[] colors = new Color[newHeight];
-                for (int j = 0; j < newHeight; j += 2)
+                for (int j = 0; j < newHeight; j ++)
                 {
                     Color color = CalculatePixel(pixels[i, j], simplifiedRoom).Item1;
                     bmp.SetPixel(i, j, color);
                 }
+                //Color[] colors = new Color[newHeight];
+                //for (int j = 0; j < newHeight; j += 2)
+                //{
+                //    Color color = CalculatePixel(pixels[i, j], simplifiedRoom).Item1;
+                //    colors[j] = color;
+                //    if(j >= 2)
+                //    {
+                //        if (colors[j - 2] == color)
+                //        {
+                //            colors[j - 1] = color;
+                //        }
+                //        else
+                //        {
+                //            colors[j - 1] = CalculatePixel(pixels[i, j - 1], simplifiedRoom).Item1;
+                //        }
+                //    }
+                //    //bmp.SetPixel(i, j, color);
+                //}
+                //for (int j = 0; j < newHeight; j++)
+                //{
+                //    bmp.SetPixel(i, j, colors[j]);
+                //}
+                //if (previouslayer != null)
+                //{
+                //    for (int j = 0; j < newHeight; j += 2)
+                //    {
+                //        if (previouslayer[j] == colors[j])
+                //        {
+                //            bmp.SetPixel(i - 1, j, colors[j]);
+                //        }
+                //        else
+                //        {
+                //            Color color = CalculatePixel(pixels[i - 1, j], simplifiedRoom).Item1;
+                //            bmp.SetPixel(i - 1, j, color);
+                //        }
+                //        if (j >= 2)
+                //        {
+                //            if (previouslayer[j - 2] == colors[j])
+                //            {
+                //                bmp.SetPixel(i - 1, j - 1, colors[j]);
+                //            }
+                //            else
+                //            {
+                //                Color color = CalculatePixel(pixels[i - 1, j - 1], simplifiedRoom).Item1;
+                //                bmp.SetPixel(i - 1, j - 1, color);
+                //            }
+                //        }
+                //    }
+                //}
+                //previouslayer = colors;
             }
             //pictureBox1.Image = bmp;
             gameScreen.Image = bmp;
@@ -437,7 +489,7 @@ namespace ProjektUppgift
                     {
                         //MessageBox.Show("AAAAAAAAAAAAAA");
                         hitX = xPosition;
-                        if (hitX <= face.x2 && hitX >= face.x1)
+                        if (hitX <= face.UpperX && hitX >= face.lowerX)
                         {
                             hitZ = face.z1;
                             hitY = (yDirection / zDirection) * (hitZ - zPosition) + yPosition;
@@ -446,11 +498,11 @@ namespace ProjektUppgift
                     }
                     else
                     {
-                        hitZ = (face.x1 - ((1 / face.zxRatio) * face.z1) - (xPosition - (xDirection / zDirection * zPosition))) / ((xDirection / zDirection) - (1 / face.zxRatio));
-                        if (hitZ <= face.z2 && hitZ >= face.z1)
+                        hitZ = (face.lowerX - ((1 / face.zxRatio) * face.LowerXZ) - (xPosition - (xDirection / zDirection * zPosition))) / ((xDirection / zDirection) - (1 / face.zxRatio));
+                        if (hitZ <= face.UpperZ && hitZ >= face.lowerZ)
                         {
                             hitX = (hitZ * (xDirection / zDirection) + xPosition) - ((xDirection / zDirection) * zPosition);
-                            if (hitX <= face.x2 + 0.01d && hitX >= face.x1 - 0.01d)
+                            if (hitX <= face.UpperX + 0.01d && hitX >= face.lowerX - 0.01d)
                             {
                                 hitY = (yDirection / zDirection) * (hitZ - zPosition) + yPosition;
                                 AfterXYZ(face);
@@ -464,7 +516,7 @@ namespace ProjektUppgift
                     {
                         hitX = face.x1;
                         hitZ = zPosition;
-                        if (hitZ <= face.z2 && hitZ >= face.z1)
+                        if (hitZ <= face.UpperZ && hitZ >= face.lowerZ)
                         {
                             hitY = (yDirection / xDirection) * (hitX - xPosition) + yPosition;
                             AfterXYZ(face);
@@ -806,6 +858,7 @@ namespace ProjektUppgift
     public class Object
     {
         public double positionX;
+        public double positionY = 0.8;
         public double positionZ;
         public double angle = 0;
         public int difficulty;
@@ -848,7 +901,7 @@ namespace ProjektUppgift
                 switch (difficulty)
                 {
                     case 1:
-                        return GenerateCuboid(positionX, 0.5, positionZ, 0.5, 0.5, angle, new Picture[] { main.colorPatternFloor1, main.colorPatternRoof1, main.colorPatternWall1, main.colorPatternRoof1 });
+                        return GenerateCuboid(positionX, positionY, positionZ, 0.2, 0.2, angle, new Picture[] { main.colorPatternFloor1, main.colorPatternRoof1, main.colorPatternWall1, main.colorPatternRoof1 });
                 }
             }
             return null;
