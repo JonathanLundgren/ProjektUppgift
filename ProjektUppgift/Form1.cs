@@ -51,7 +51,7 @@ Log :
 04/24 Uppdaterade systemet som används för att göra mönster på väggarna.
 04/26 Golv och Tak använder nu också det uppdaterade systemet. Påbörjade system för fiender.
 04/30 Påbörjade rendring av fiender.
-05/03 Fixade rendrings-bugg. Väggar kan nu ha fler vinklar än multiplar av 90 grader, och det går nu göra botten och topp på kuber.
+05/03 Fixade rendrings-bugg. Väggar kan nu ha fler vinklar än multiplar av 90 grader, och det går nu göra topp och botten på kuber.
 
 */
 namespace ProjektUppgift
@@ -86,7 +86,7 @@ namespace ProjektUppgift
             new Level
             (
                 "Level 2",
-                new int[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 10, 0 } },
+                new int[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 10, 11 } },
                 new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } },
                 null,
                 null,
@@ -503,8 +503,16 @@ namespace ProjektUppgift
                                     {
                                         currentClosest = face;
                                         proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) + Math.Pow(hitY - yPosition, 2);
-                                        relativeHitFromLower = Math.Abs(hitX - face.x1);
-                                        relativeHitY = Math.Abs(hitZ - face.z1);
+                                        if (face.lowerFunction1.Item1 == 0)
+                                        {
+                                            relativeHitFromLower = Math.Abs(hitZ - face.z2);
+                                            relativeHitY = Math.Abs(hitX - face.x2);
+                                        }
+                                        else
+                                        {
+                                            relativeHitFromLower = Math.Abs(hitX - face.x2);
+                                            relativeHitY = Math.Abs(hitZ - face.z2);
+                                        }
                                     }
                                 }
                             }
@@ -988,6 +996,7 @@ namespace ProjektUppgift
                 lowerFunction2 = (tempk, tempm);
                 higherFunction2 = (tempk, z3 - tempk * x3);
             }
+            SetValues();
 
         }
         
@@ -1025,7 +1034,7 @@ namespace ProjektUppgift
         public double positionX;
         public double positionY = 0.8;
         public double positionZ;
-        public double angle = 0;
+        public double angle = Math.PI * 1.5;
         public int difficulty;
         public bool isEnemy;
         public bool isImmobile;
@@ -1042,6 +1051,12 @@ namespace ProjektUppgift
                     isEnemy = true;
                     isImmobile = true;
                     break;
+                case 11:
+                    difficulty = 1;
+                    isEnemy = true;
+                    isImmobile = true;
+                    angle = Math.PI * 1.6;
+                    break;
             }
 
             this.main = main;
@@ -1056,7 +1071,7 @@ namespace ProjektUppgift
                     
                 }
             }
-            angle += Math.PI / 128;
+            angle += Math.PI / 16;
         }
 
         public Face[] GetFaces()
