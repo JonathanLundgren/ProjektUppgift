@@ -116,6 +116,7 @@ namespace ProjektUppgift
         int isADown = 0;
         int isDDown = 0;
         double playerSpeed = 0.1;
+        double verticalVelocity = 0;
         bool isGameActive = false;
         bool controlCursor = false;
         List<ButtonData> buttons = new List<ButtonData>();
@@ -350,6 +351,14 @@ namespace ProjektUppgift
                         playerPositionZ = newZPos;
                     }
                 }
+            }
+
+            playerPositionY -= verticalVelocity;
+            verticalVelocity -= 0.01;
+            if (playerPositionY >= 0.5)
+            {
+                playerPositionY = 0.5;
+                verticalVelocity = 0;
             }
         }
 
@@ -770,8 +779,10 @@ namespace ProjektUppgift
                 baseXPosition = 0;
                 baseZPosition = 0;
             }
-            baseXPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + Math.Tan(angle) * Math.Tan(angle));
-            baseZPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + (1 / (Math.Tan(angle) * Math.Tan(angle))));
+            //baseXPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + Math.Tan(angle) * Math.Tan(angle));
+            //baseZPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + (1 / (Math.Tan(angle) * Math.Tan(angle))));
+            baseXPosition = -Math.Cos(angle) * Math.Sin(angleVertical) * localYPos;
+            baseZPosition = -Math.Sin(angle) * Math.Sin(angleVertical) * localYPos;
             baseXPosition += localXPos * Math.Sin(angle);
             baseZPosition += localXPos * -Math.Cos(angle);
             double projectedXPosition = baseXPosition * imageScale;
@@ -784,7 +795,15 @@ namespace ProjektUppgift
             double y = Math.Sin(angleVertical);
             double h = Math.Sqrt(1 - y * y);
             double x = Math.Cos(angle) * h;
+            //if (angle < 180)
+            //{
+            //    x = -x;
+            //}
             double z = Math.Sin(angle) * h;
+            //if (angle < 90)
+            //{
+            //    z = -z;
+            //}
             //double x = 1 / ((1 + a2) * (c2 - 1));
             //double y = c * x * x * Math.Sqrt(1 + a2);
             //double z = a * x;
@@ -864,6 +883,14 @@ namespace ProjektUppgift
                     FixCursor();
                 }
             }
+            if (e.KeyCode == Keys.Space)
+            {
+                if (playerPositionY == 0.5)
+                {
+                    verticalVelocity = 0.1;
+                }
+            }
+
         }
 
         bool isCursorHidden = false;
@@ -911,9 +938,9 @@ namespace ProjektUppgift
             {
                 angleVertical = Math.PI / 5;
             }
-            if (angleVertical < Math.PI * 4 / 5 && angleVertical >= Math.PI)
+            if (angleVertical < Math.PI * 9 / 5 && angleVertical >= Math.PI)
             {
-                angleVertical = Math.PI * 4 / 5;
+                angleVertical = Math.PI * 9 / 5;
             }
 
         }
