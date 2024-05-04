@@ -95,8 +95,8 @@ namespace ProjektUppgift
         int[,] testRoomCode = new int[,] { { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 1 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 2, 0, 0 } };
         int[,] currentRoomCode;
         //Vilken riktning spelaren tittar mot.
-        public double angle = 0;
-        public double angleVertical = 0;
+        public float angle = 0;
+        public float angleVertical = 0;
         //Spelarens position.
         public double playerPositionX = 0.5;
         public double playerPositionY = 0.5;
@@ -115,8 +115,10 @@ namespace ProjektUppgift
         int isSDown = 0;
         int isADown = 0;
         int isDDown = 0;
-        double playerSpeed = 0.1;
+        double playerSpeed = 0.2;
         double verticalVelocity = 0;
+        double jumpForce = 0.5;
+        double gravity = 0.1;
         bool isGameActive = false;
         bool controlCursor = false;
         List<ButtonData> buttons = new List<ButtonData>();
@@ -354,7 +356,7 @@ namespace ProjektUppgift
             }
 
             playerPositionY -= verticalVelocity;
-            verticalVelocity -= 0.01;
+            verticalVelocity -= gravity;
             if (playerPositionY >= 0.5)
             {
                 playerPositionY = 0.5;
@@ -377,17 +379,17 @@ namespace ProjektUppgift
             //Color[] previouslayer = null;
             for (int i = 0; i < newWidth; i ++)
             {
-                for (int j = 0; j < newHeight; j ++)
+                for (int j = 0; j < newHeight; j++)
                 {
                     Color color = CalculatePixel(pixels[i, j], currentRoom).Item1;
                     bmp.SetPixel(i, j, color);
                 }
                 //Color[] colors = new Color[newHeight];
-                //for (int j = 0; j < newHeight; j += 2)
+                //for (int j = 0; j < newHeight; j ++)
                 //{
                 //    Color color = CalculatePixel(pixels[i, j], simplifiedRoom).Item1;
                 //    colors[j] = color;
-                //    if(j >= 2)
+                //    if (j >= 2)
                 //    {
                 //        if (colors[j - 2] == color)
                 //        {
@@ -864,12 +866,12 @@ namespace ProjektUppgift
             }
             if (e.KeyCode == Keys.Left)
             {
-                angle += Math.PI / 16;
+                angle += (float)Math.PI / 16;
                 fixAngle();
             }
             if (e.KeyCode == Keys.Right)
             {
-                angle -= Math.PI / 16;
+                angle -= (float)Math.PI / 16;
                 fixAngle();
             }
             if (e.KeyCode == Keys.Escape)
@@ -887,7 +889,7 @@ namespace ProjektUppgift
             {
                 if (playerPositionY == 0.5)
                 {
-                    verticalVelocity = 0.1;
+                    verticalVelocity = jumpForce;
                 }
             }
 
@@ -920,27 +922,27 @@ namespace ProjektUppgift
         {
             while (angle < 0)
             {
-                angle += 2 * Math.PI;
+                angle += 2 * (float)Math.PI;
             }
             while (angle > Math.PI * 2)
             {
-                angle -= 2 * Math.PI;
+                angle -= 2 * (float)Math.PI;
             }
             while(angleVertical < 0)
             {
-                angleVertical += 2 * Math.PI;
+                angleVertical += 2 * (float)Math.PI;
             }
             while (angleVertical > Math.PI * 2)
             {
-                angleVertical -= 2 * Math.PI;
+                angleVertical -= 2 * (float)Math.PI;
             }
             if (angleVertical > Math.PI / 5 && angleVertical < Math.PI)
             {
-                angleVertical = Math.PI / 5;
+                angleVertical = (float)Math.PI / 5;
             }
             if (angleVertical < Math.PI * 9 / 5 && angleVertical >= Math.PI)
             {
-                angleVertical = Math.PI * 9 / 5;
+                angleVertical = (float)Math.PI * 9 / 5;
             }
 
         }
@@ -969,8 +971,8 @@ namespace ProjektUppgift
         {
             if (controlCursor)
             {
-                angle -= ((double)Cursor.Position.X - Location.X - width / 2) / 300;
-                angleVertical += ((double)Cursor.Position.Y - Location.Y - height / 2) / 300;
+                angle -= ((float)Cursor.Position.X - Location.X - width / 2) / 300;
+                angleVertical += ((float)Cursor.Position.Y - Location.Y - height / 2) / 300;
                 fixAngle();
                 Cursor.Position = new Point(Location.X + width / 2, Location.Y + height / 2);
             }
