@@ -65,7 +65,6 @@ namespace ProjektUppgift
         const int resolution = 4;
         double imageSize = 0.25;
         double imageScale = 8;
-        double imageScaleY = 1.5;
         //Höjd och bredd som används för beräkningar.
         readonly int newWidth = width / resolution;
         readonly int newHeight = height / resolution;
@@ -97,6 +96,7 @@ namespace ProjektUppgift
         int[,] currentRoomCode;
         //Vilken riktning spelaren tittar mot.
         public double angle = 0;
+        public double angleVertical = 0;
         //Spelarens position.
         public double playerPositionX = 0.5;
         public double playerPositionY = 0.5;
@@ -134,7 +134,7 @@ namespace ProjektUppgift
             {
                 for (int j = 0; j < newHeight; j++)
                 {
-                    pixels[i, j] = new Pixel(imageSize * (i - (newWidth / 2)) / newWidth, imageSize * (j - (newHeight / 2)) / newWidth);
+                    pixels[i, j] = new Pixel(imageSize * (i - (newWidth / 2)) / newWidth, imageSize * (j - (newHeight / 2)) / newHeight);
                 }
             }
             //StartRoom(testRoomCode);
@@ -370,7 +370,7 @@ namespace ProjektUppgift
             {
                 for (int j = 0; j < newHeight; j ++)
                 {
-                    Color color = CalculatePixel(pixels[i, j], simplifiedRoom).Item1;
+                    Color color = CalculatePixel(pixels[i, j], currentRoom).Item1;
                     bmp.SetPixel(i, j, color);
                 }
                 //Color[] colors = new Color[newHeight];
@@ -431,7 +431,7 @@ namespace ProjektUppgift
         //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas.
         public (Color, Face) CalculatePixel(Pixel pixel, List<Face> room)
         {
-            CalculateRatio(pixel.xPos, pixel.yPos, angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition);
+            CalculateRatio(pixel.xPos, pixel.yPos, angle, angleVertical, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition);
             return CalculateLine(xDirection, yDirection, zDirection, xPosition, yPosition, zPosition, room);
         }
 
@@ -755,20 +755,60 @@ namespace ProjektUppgift
         }
 
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
-        public void CalculateRatio(double localXPos, double localYPos, double angle, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition)
+        public void CalculateRatio(double localXPos, double localYPos, double angle, double angleVertical, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition)
         {
-            double baseXPosition = localXPos * Math.Sin(angle);
-            double baseZPosition = localXPos * -Math.Cos(angle);
-            double baseYPosition = localYPos;
-            double projectedXPosition = Math.Cos(angle) + baseXPosition * imageScale;
-            double projectedZPosition = Math.Sin(angle) + baseZPosition * imageScale;
-            double projectedYPosition = baseYPosition * imageScale * imageScaleY;
+            double baseYPosition = Math.Cos(angleVertical) * localYPos;
+            double baseXPosition;
+            double baseZPosition;
+            if (angle == 0)
+            {
+                baseXPosition = localYPos;
+                baseZPosition = 0;
+            }
+            else if (angle == Math.PI * 0.5)
+            {
+                baseXPosition = 0;
+                baseZPosition = 0;
+            }
+            baseXPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + Math.Tan(angle) * Math.Tan(angle));
+            baseZPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + (1 / (Math.Tan(angle) * Math.Tan(angle))));
+            baseXPosition += localXPos * Math.Sin(angle);
+            baseZPosition += localXPos * -Math.Cos(angle);
+            double projectedXPosition = baseXPosition * imageScale;
+            double projectedYPosition = baseYPosition * imageScale;
+            double projectedZPosition = baseZPosition * imageScale;
+            double a = Math.Tan(angle);
+            double c = Math.Tan(angleVertical);
+            double a2 = a * a;
+            double c2 = c * c;
+            double y = Math.Sin(angleVertical);
+            double h = Math.Sqrt(1 - y * y);
+            double x = Math.Cos(angle) * h;
+            double z = Math.Sin(angle) * h;
+            //double x = 1 / ((1 + a2) * (c2 - 1));
+            //double y = c * x * x * Math.Sqrt(1 + a2);
+            //double z = a * x;
+            projectedXPosition += x;
+            projectedYPosition += y;
+            projectedZPosition += z;
             xDirection = projectedXPosition - baseXPosition;
             yDirection = projectedYPosition - baseYPosition;
             zDirection = projectedZPosition - baseZPosition;
             xPosition = baseXPosition + playerPositionX;
             yPosition = baseYPosition + playerPositionY;
             zPosition = baseZPosition + playerPositionZ;
+            //double baseXPosition = localXPos * Math.Sin(angle);
+            //double baseZPosition = localXPos * -Math.Cos(angle);
+            //double baseYPosition = localYPos;
+            //double projectedXPosition = Math.Cos(angle) + baseXPosition * imageScale;
+            //double projectedZPosition = Math.Sin(angle) + baseZPosition * imageScale;
+            //double projectedYPosition = baseYPosition * imageScale;
+            //xDirection = projectedXPosition - baseXPosition;
+            //yDirection = projectedYPosition - baseYPosition;
+            //zDirection = projectedZPosition - baseZPosition;
+            //xPosition = baseXPosition + playerPositionX;
+            //yPosition = baseYPosition + playerPositionY;
+            //zPosition = baseZPosition + playerPositionZ;
             //double verticalAngle = Math.Atan2(localYPos * (imageScale - 1), 1) * 180 / Math.PI;
             //double horizontalAngle = Math.Atan2(localXPos * (imageScale - 1), 1) * 180 / Math.PI + angle;
             //double a = Math.Tan(verticalAngle * Math.PI / 180);
@@ -805,12 +845,12 @@ namespace ProjektUppgift
             }
             if (e.KeyCode == Keys.Left)
             {
-                angle += Math.PI / 18;
+                angle += Math.PI / 16;
                 fixAngle();
             }
             if (e.KeyCode == Keys.Right)
             {
-                angle -= Math.PI / 18;
+                angle -= Math.PI / 16;
                 fixAngle();
             }
             if (e.KeyCode == Keys.Escape)
@@ -859,6 +899,23 @@ namespace ProjektUppgift
             {
                 angle -= 2 * Math.PI;
             }
+            while(angleVertical < 0)
+            {
+                angleVertical += 2 * Math.PI;
+            }
+            while (angleVertical > Math.PI * 2)
+            {
+                angleVertical -= 2 * Math.PI;
+            }
+            if (angleVertical > Math.PI / 5 && angleVertical < Math.PI)
+            {
+                angleVertical = Math.PI / 5;
+            }
+            if (angleVertical < Math.PI * 4 / 5 && angleVertical >= Math.PI)
+            {
+                angleVertical = Math.PI * 4 / 5;
+            }
+
         }
 
         private void Form1_KeyUp(object sender, KeyEventArgs e)
@@ -886,6 +943,7 @@ namespace ProjektUppgift
             if (controlCursor)
             {
                 angle -= ((double)Cursor.Position.X - Location.X - width / 2) / 300;
+                angleVertical += ((double)Cursor.Position.Y - Location.Y - height / 2) / 300;
                 fixAngle();
                 Cursor.Position = new Point(Location.X + width / 2, Location.Y + height / 2);
             }
