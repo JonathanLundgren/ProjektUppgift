@@ -52,6 +52,8 @@ Log :
 04/26 Golv och Tak använder nu också det uppdaterade systemet. Påbörjade system för fiender.
 04/30 Påbörjade rendring av fiender.
 05/03 Fixade rendrings-bugg. Väggar kan nu ha fler vinklar än multiplar av 90 grader, och det går nu göra topp och botten på kuber.
+05/04 Det går nu att titta lite uppåt och nedåt.
+05/08 Jobbade med matematik som kommer att behövas.
 
 */
 namespace ProjektUppgift
