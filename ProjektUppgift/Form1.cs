@@ -65,8 +65,8 @@ namespace ProjektUppgift
         const int height = 800;
         //Hur hög upplösning det är. Mindre värde ger högre upplösning.
         const int resolution = 4;
-        double imageSize = 0.25;
-        double imageScale = 8;
+        float imageSize = 0.25f;
+        float imageScale = 8;
         //Höjd och bredd som används för beräkningar.
         readonly int newWidth = width / resolution;
         readonly int newHeight = height / resolution;
@@ -100,16 +100,16 @@ namespace ProjektUppgift
         public float angle = 0;
         public float angleVertical = 0;
         //Spelarens position.
-        public double playerPositionX = 0.5;
-        public double playerPositionY = 0.5;
-        public double playerPositionZ = 0.5;
-        double wallHitboxSize = 0.2;
+        public float playerPositionX = 0.5f;
+        public float playerPositionY = 0.5f;
+        public float playerPositionZ = 0.5f;
+        float wallHitboxSize = 0.2f;
         //Hur högt upp taket är.
-        public const double roomHeight = 1;
+        public const float roomHeight = 1;
         Color roomColor = Color.DarkGreen;
         Color roomColorPattern = Color.DarkGray;
         Color roofColor = Color.DarkBlue;
-        double lineSize = 0.1;
+        float lineSize = 0.1f;
         //Alla ytor som finns i det genererade rummet.
         public List<Face> currentRoom = new List<Face>();
         List<Object> objects = new List<Object>();
@@ -117,10 +117,10 @@ namespace ProjektUppgift
         int isSDown = 0;
         int isADown = 0;
         int isDDown = 0;
-        double playerSpeed = 0.2;
-        double verticalVelocity = 0;
-        double jumpForce = 0.5;
-        double gravity = 0.1;
+        float playerSpeed = 0.2f;
+        float verticalVelocity = 0;
+        float jumpForce = 0.5f;
+        float gravity = 0.1f;
         bool isGameActive = false;
         bool controlCursor = false;
         List<ButtonData> buttons = new List<ButtonData>();
@@ -226,11 +226,11 @@ namespace ProjektUppgift
             {
                 if (roomCode[i, 0] != 1)
                 {
-                    room.Add(new Face(Math.PI / 2, i, 0, 0, i + 1, roomHeight, 0, colorPatternWall1));
+                    room.Add(new Face((float)Math.PI / 2, i, 0, 0, i + 1, roomHeight, 0, colorPatternWall1));
                 }
                 if (roomCode[i, roomCode.GetLength(1) - 1] != 1)
                 {
-                    room.Add(new Face(Math.PI * 1.5, i, 0, roomCode.GetLength(1), i + 1, roomHeight, roomCode.GetLength(1), colorPatternWall1));
+                    room.Add(new Face((float)Math.PI * 1.5f, i, 0, roomCode.GetLength(1), i + 1, roomHeight, roomCode.GetLength(1), colorPatternWall1));
                 }
             }
             for (int i = 0; i < roomCode.GetLength(1); i++)
@@ -241,7 +241,7 @@ namespace ProjektUppgift
                 }
                 if (roomCode[roomCode.GetLength(0) - 1, i] != 1)
                 {
-                    room.Add(new Face(Math.PI, roomCode.GetLength(0), 0, i, roomCode.GetLength(0), roomHeight, i + 1, colorPatternWall1));
+                    room.Add(new Face((float)Math.PI, roomCode.GetLength(0), 0, i, roomCode.GetLength(0), roomHeight, i + 1, colorPatternWall1));
                 }
             }
             for (int i = 0; i < roomCode.GetLength(0); i++)
@@ -254,7 +254,7 @@ namespace ProjektUppgift
                         {
                             if (roomCode[i - 1, j] != 1)
                             {
-                                room.Add(new Face(Math.PI, i, 0, j, i, roomHeight, j + 1, colorPatternWall1));
+                                room.Add(new Face((float)Math.PI, i, 0, j, i, roomHeight, j + 1, colorPatternWall1));
                             }
                         }
                         if (i < roomCode.GetLength(0) - 1)
@@ -268,14 +268,14 @@ namespace ProjektUppgift
                         {
                             if (roomCode[i, j - 1] != 1)
                             {
-                                room.Add(new Face(Math.PI * 1.5, i, 0, j, i + 1, roomHeight, j, colorPatternWall1));
+                                room.Add(new Face((float)Math.PI * 1.5f, i, 0, j, i + 1, roomHeight, j, colorPatternWall1));
                             }
                         }
                         if (j < roomCode.GetLength(1) - 1)
                         {
                             if (roomCode[i, j + 1] != 1)
                             {
-                                room.Add(new Face(Math.PI / 2, i, 0, j + 1, i + 1, roomHeight, j + 1, colorPatternWall1));
+                                room.Add(new Face((float)Math.PI / 2, i, 0, j + 1, i + 1, roomHeight, j + 1, colorPatternWall1));
                             }
                         }
                     }
@@ -324,17 +324,17 @@ namespace ProjektUppgift
 
         public void MovePlayer()
         {
-            double horizontal = isADown - isDDown;
-            double vertical = isWDown - isSDown;
+            float horizontal = isADown - isDDown;
+            float vertical = isWDown - isSDown;
             if (!(horizontal == 0 && vertical == 0))
             {
-                double movementDirection = Math.Atan2(horizontal, vertical) + angle;
+                float movementDirection = (float)Math.Atan2(horizontal, vertical) + angle;
 
-                double movementX = Math.Cos(movementDirection);
-                double movementZ = Math.Sin(movementDirection);
+                float movementX = (float)Math.Cos(movementDirection);
+                float movementZ = (float)Math.Sin(movementDirection);
 
-                double newXPos = playerPositionX + movementX * playerSpeed;
-                double newZPos = playerPositionZ + movementZ * playerSpeed;
+                float newXPos = playerPositionX + movementX * playerSpeed;
+                float newZPos = playerPositionZ + movementZ * playerSpeed;
 
                 int playerGridPosX = (int)Math.Floor(playerPositionX);
                 int playerGridPosZ = (int)Math.Floor(playerPositionZ);
@@ -361,7 +361,7 @@ namespace ProjektUppgift
             verticalVelocity -= gravity;
             if (playerPositionY >= 0.5)
             {
-                playerPositionY = 0.5;
+                playerPositionY = 0.5f;
                 verticalVelocity = 0;
             }
         }
@@ -370,12 +370,12 @@ namespace ProjektUppgift
         public void UpdateImage()
         {
             Bitmap bmp = new Bitmap(newWidth, newHeight);
-            List<Face> simplifiedRoom = SimplifyRoom(currentRoom);
+            //List<Face> simplifiedRoom = SimplifyRoom(currentRoom);
             foreach (Object o in objects)
             {
                 foreach (Face face in o.GetFaces())
                 {
-                    simplifiedRoom.Add(face);
+                    //simplifiedRoom.Add(face);
                 }
             }
             //Color[] previouslayer = null;
@@ -444,48 +444,127 @@ namespace ProjektUppgift
         //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas.
         public (Color, Face) CalculatePixel(Pixel pixel, List<Face> room)
         {
-            CalculateRatio(pixel.xPos, pixel.yPos, angle, angleVertical, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition);
+            CalculateRatio(pixel.xPos, pixel.yPos, angle, angleVertical, out float xDirection, out float yDirection, out float zDirection, out float xPosition, out float yPosition, out float zPosition);
             return CalculateLine(xDirection, yDirection, zDirection, xPosition, yPosition, zPosition, room);
         }
 
-        public List<Face> SimplifyRoom(List<Face> room)
+        public Line[] SimplifyRoom(List<Face> room)
         {
-            List<Face> result = new List<Face>();
-            for (int i = 0; i < newWidth; i += 3)
+            //List<Face> result = new List<Face>();
+            //for (int i = 0; i < newWidth; i += 3)
+            //{
+            //    Face face = CalculatePixel(pixels[i, newHeight / 2], room).Item2;
+            //    if ((!result.Contains(face)) && face != null)
+            //    {
+            //        result.Add(face);
+            //    }
+            //}
+            //return result;
+            //y = kx + m
+            //m = y - kx
+            CalculateRatio(0, 0, angle, angleVertical, out float xDirectionMiddle, out float yDirectionMiddle, out float zDirectionMiddle, out float xPositionMiddle, out float yPositionMiddle, out float zPositionMiddle);
+            CalculateRatio(-imageSize / 2, -imageSize / 2, angle, angleVertical, out float xDirectionDownLeft, out float yDirectionDownLeft, out float zDirectionDownLeft, out float xPositionDownLeft, out float yPositionDownLeft, out float zPositionDownLeft);
+            CalculateRatio(imageSize / 2, imageSize / 2, angle, angleVertical, out float xDirectionUpRight, out float yDirectionUpRight, out float zDirectionUpRight, out float xPositionUpRight, out float yPositionUpRight, out float zPositionUpRight);
+            (float, float) straightLineLeft = (zDirectionDownLeft / xDirectionDownLeft, zPositionDownLeft - zDirectionDownLeft / xDirectionDownLeft * xPositionDownLeft);
+            (float, float) straightLineRight = (zDirectionUpRight / xDirectionUpRight, zPositionUpRight - zDirectionUpRight / xDirectionUpRight * xPositionUpRight);
+            (float, float) straightLineMiddleHorizontal = (zDirectionMiddle / xDirectionMiddle, zPositionMiddle - zDirectionMiddle / xDirectionMiddle * xPositionMiddle);
+            Line[] toreturn = new Line[newHeight];
+            foreach(Face face in room)
             {
-                Face face = CalculatePixel(pixels[i, newHeight / 2], room).Item2;
-                if ((!result.Contains(face)) && face != null)
+                (float, float, float) corner1;
+                (float, float, float) corner2;
+                (float, float, float) corner3;
+                (float, float, float) corner4;
+
+                if (face.y1 == face.y2)
                 {
-                    result.Add(face);
+                    corner1.Item1 = face.x1;
+                    corner1.Item2 = face.y1;
+                    corner1.Item3 = face.z1;
+                    corner2.Item1 = face.x2;
+                    corner2.Item2 = face.y2;
+                    corner2.Item3 = face.z2;
+                    corner3.Item1 = face.x1;
+                    corner3.Item2 = face.y1;
+                    corner3.Item3 = face.z2;
+                    corner4.Item1 = face.x2;
+                    corner4.Item2 = face.y2;
+                    corner4.Item3 = face.z1;
+                }
+                else
+                {
+                    corner1.Item1 = face.x1;
+                    corner1.Item2 = face.y1;
+                    corner1.Item3 = face.z1;
+                    corner2.Item1 = face.x1;
+                    corner2.Item2 = face.y2;
+                    corner2.Item3 = face.z1;
+                    corner3.Item1 = face.x2;
+                    corner3.Item2 = face.y1;
+                    corner3.Item3 = face.z2;
+                    corner4.Item1 = face.x2;
+                    corner4.Item2 = face.y2;
+                    corner4.Item3 = face.z2;
+                }
+
+            }
+            return null;
+
+            (int, int) GetPosOnScreen(float x, float y, float z)
+            {
+                float xPosStraight;
+                float zPosStraight;
+                float partHorizontal;
+
+                if (Math.Atan2(z - playerPositionZ, x - playerPositionX) % (Math.PI * 2) <= angle)
+                {
+                    //(float, float) parallel = (-1 / straightLineMiddleHorizontal.Item1, z + x / straightLineMiddleHorizontal.Item1);
+                    xPosStraight = (z + x/straightLineMiddleHorizontal.Item1 - straightLineMiddleHorizontal.Item2) / (straightLineMiddleHorizontal.Item1 + 1 / straightLineMiddleHorizontal.Item1);
+                    zPosStraight = straightLineMiddleHorizontal.Item1 * xPosStraight + straightLineMiddleHorizontal.Item2;
+                    float xPosRight = (z + x / straightLineMiddleHorizontal.Item1 - straightLineRight.Item2) / (straightLineRight.Item1 + 1 / straightLineMiddleHorizontal.Item1);
+                    float zPosRight = straightLineRight.Item1 * xPosRight + straightLineRight.Item2;
+                    partHorizontal = (float)Math.Sqrt(((x - xPosStraight) * (x - xPosStraight) + (z - zPosStraight) * (z - zPosStraight)) / ((xPosRight - xPosStraight) * (xPosRight - xPosStraight) + (zPosRight - zPosStraight) * (zPosRight - zPosStraight)));
+                }
+                else
+                {
+                    xPosStraight = (z + x / straightLineMiddleHorizontal.Item1 - straightLineMiddleHorizontal.Item2) / (straightLineMiddleHorizontal.Item1 + 1 / straightLineMiddleHorizontal.Item1);
+                    zPosStraight = straightLineMiddleHorizontal.Item1 * xPosStraight + straightLineMiddleHorizontal.Item2;
+                    float xPosLeft = (z + x / straightLineMiddleHorizontal.Item1 - straightLineLeft.Item2) / (straightLineLeft.Item1 + 1 / straightLineMiddleHorizontal.Item1);
+                    float zPosLeft = straightLineLeft.Item1 * xPosLeft + straightLineLeft.Item2;
+                    partHorizontal = (float)Math.Sqrt(((x - xPosStraight) * (x - xPosStraight) + (z - zPosStraight) * (z - zPosStraight)) / ((xPosLeft - xPosStraight) * (xPosLeft - xPosStraight) + (zPosLeft - zPosStraight) * (zPosLeft - zPosStraight)));
+                }
+
+                if (Math.Atan2(y - playerPositionY, Math.Sqrt((x - playerPositionX) * (x - playerPositionX) + (z - playerPositionZ) * (z - playerPositionZ))) % (Math.PI * 2) >= angleVertical)
+                {
+
                 }
             }
-            return result;
         }
 
 
-        public (Color, Face) CalculateLine(double xDirection, double yDirection, double zDirection, double xPosition, double yPosition, double zPosition, List<Face> faces)
+        public (Color, Face) CalculateLine(float xDirection, float yDirection, float zDirection, float xPosition, float yPosition, float zPosition, List<Face> faces)
         {
             Face currentClosest = null;
-            double proximity = 1000000;
-            double relativeHitFromLower = 0;
-            double relativeHitY = 0;
-            double hitX = 0;
-            double hitY;
-            double hitZ;
+            float proximity = 1000000;
+            float relativeHitFromLower = 0;
+            float relativeHitY = 0;
+            float hitX = 0;
+            float hitY;
+            float hitZ;
             Color color = Color.Black;
 
             void AfterXYZ(Face face)
             {
                 if (hitY <= face.y2 && hitY >= face.y1)
                 {
-                    double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
+                    float direction = (float)Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
                     if (Math.Abs(direction - angle) <= Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) <= Math.PI / 2)
                     {
                         if (Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) + Math.Pow(hitY - yPosition, 2) < proximity)
                         {
                             currentClosest = face;
-                            proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) + Math.Pow(hitY - yPosition, 2);
-                            relativeHitFromLower = Math.Sqrt((hitX - face.x1) * (hitX - face.x1) + (hitZ - face.z1) * (hitZ - face.z1));
+                            proximity = (float)Math.Pow(hitX - xPosition, 2) + (float)Math.Pow(hitZ - zPosition, 2) + (float)Math.Pow(hitY - yPosition, 2);
+                            relativeHitFromLower = (float)Math.Sqrt((hitX - face.x1) * (hitX - face.x1) + (hitZ - face.z1) * (hitZ - face.z1));
                             relativeHitY = hitY - face.y1;
                         }
                     }
@@ -509,13 +588,13 @@ namespace ProjektUppgift
                             hitZ = (hitY * (zDirection / yDirection) + zPosition) - ((zDirection / yDirection) * yPosition);
                             if (hitZ <= face.UpperZ && hitZ >= face.lowerZ)
                             {
-                                double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
+                                float direction = (float)Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
                                 if (Math.Abs(direction - angle) <= Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) <= Math.PI / 2)
                                 {
                                     if (Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) + Math.Pow(hitY - yPosition, 2) < proximity)
                                     {
                                         currentClosest = face;
-                                        proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) + Math.Pow(hitY - yPosition, 2);
+                                        proximity = (float)Math.Pow(hitX - xPosition, 2) + (float)Math.Pow(hitZ - zPosition, 2) + (float)Math.Pow(hitY - yPosition, 2);
                                         if (face.lowerFunction1.Item1 == 0)
                                         {
                                             relativeHitFromLower = Math.Abs(hitZ - face.z2);
@@ -544,23 +623,23 @@ namespace ProjektUppgift
                                 {
                                     if (hitZ >= face.lowerFunction2.Item1 * hitX + face.lowerFunction2.Item2)
                                     {
-                                        double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
+                                        float direction = (float)Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
                                         if (Math.Abs(direction - angle) <= Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) <= Math.PI / 2)
                                         {
                                             if (Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) + Math.Pow(hitY - yPosition, 2) < proximity)
                                             {
                                                 currentClosest = face;
-                                                proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) + Math.Pow(hitY - yPosition, 2);
-                                                double tempk = face.lowerFunction2.Item1;
-                                                double tempm = hitZ - tempk * hitX;
-                                                double intersectX = (face.lowerFunction1.Item2 - tempm) / (tempk - face.lowerFunction1.Item1);
-                                                double intersectZ = tempk * intersectX + tempm;
-                                                relativeHitFromLower = Math.Sqrt(Math.Pow(intersectX - hitX, 2) + Math.Pow(intersectZ - hitZ, 2));
+                                                proximity = (float)Math.Pow(hitX - xPosition, 2) + (float)Math.Pow(hitZ - zPosition, 2) + (float)Math.Pow(hitY - yPosition, 2);
+                                                float tempk = face.lowerFunction2.Item1;
+                                                float tempm = hitZ - tempk * hitX;
+                                                float intersectX = (face.lowerFunction1.Item2 - tempm) / (tempk - face.lowerFunction1.Item1);
+                                                float intersectZ = tempk * intersectX + tempm;
+                                                relativeHitFromLower = (float)Math.Sqrt(Math.Pow(intersectX - hitX, 2) + Math.Pow(intersectZ - hitZ, 2));
                                                 tempk = face.lowerFunction1.Item1;
                                                 tempm = hitZ - tempk * hitX;
                                                 intersectX = (face.lowerFunction2.Item2 - tempm) / (tempk - face.lowerFunction2.Item1);
                                                 intersectZ = tempk * intersectX + tempm;
-                                                relativeHitY = Math.Sqrt(Math.Pow(intersectX - hitX, 2) + Math.Pow(intersectZ - hitZ, 2));
+                                                relativeHitY = (float)Math.Sqrt(Math.Pow(intersectX - hitX, 2) + Math.Pow(intersectZ - hitZ, 2));
                                             }
                                         }
                                     }
@@ -642,13 +721,13 @@ namespace ProjektUppgift
                 //x = (c - a) / (b - d)
                 //if (face.isDirectionX)
                 //{
-                //    double hitZ = (face.x1 - xPosition) * zDirection / xDirection + zPosition;
-                //    double direction = Math.Atan2(hitZ - playerPositionZ, face.x1 - playerPositionX);
+                //    float hitZ = (face.x1 - xPosition) * zDirection / xDirection + zPosition;
+                //    float direction = Math.Atan2(hitZ - playerPositionZ, face.x1 - playerPositionX);
                 //    if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
                 //    {
                 //        if (face.z1 <= hitZ && hitZ <= face.z2)
                 //        {
-                //            double hitY = (face.x1 - xPosition) * yDirection / xDirection + yPosition;
+                //            float hitY = (face.x1 - xPosition) * yDirection / xDirection + yPosition;
                 //            if (0 <= hitY && hitY <= roomHeight)
                 //            {
                 //                if (Math.Pow(face.x1 - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
@@ -665,13 +744,13 @@ namespace ProjektUppgift
                 //}
                 //else
                 //{
-                //    double hitX = (face.z1 - zPosition) * xDirection / zDirection + xPosition;
-                //    double direction = Math.Atan2(face.z1 - playerPositionZ, hitX - playerPositionX);
+                //    float hitX = (face.z1 - zPosition) * xDirection / zDirection + xPosition;
+                //    float direction = Math.Atan2(face.z1 - playerPositionZ, hitX - playerPositionX);
                 //    if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
                 //    {
                 //        if (face.x1 <= hitX && hitX <= face.x2)
                 //        {
-                //            double hitY = (face.z1 - zPosition) * yDirection / zDirection + yPosition;
+                //            float hitY = (face.z1 - zPosition) * yDirection / zDirection + yPosition;
                 //            if (0 <= hitY && hitY <= roomHeight)
                 //            {
                 //                if (Math.Pow(hitX - xPosition, 2) + Math.Pow(face.z1 - zPosition, 2) < proximity)
@@ -690,7 +769,7 @@ namespace ProjektUppgift
             //Kod som gör olika mönster.
             if (currentClosest != null)
             {
-                if (Math.Abs(hitX) == double.PositiveInfinity)
+                if (Math.Abs(hitX) == float.PositiveInfinity)
                 {
                     hitX = 0;
                     hitZ = 0;
@@ -703,8 +782,8 @@ namespace ProjektUppgift
                 {
                     currentClosest.length = 1;
                 }
-                double patternX = relativeHitFromLower % currentClosest.length;
-                double patternY = relativeHitY % currentClosest.height;
+                float patternX = relativeHitFromLower % currentClosest.length;
+                float patternY = relativeHitY % currentClosest.height;
                 int pixelX = (int)(currentClosest.picture.pattern.GetLength(0) * patternX / currentClosest.length);
                 int pixelY = (int)(currentClosest.picture.pattern.GetLength(1) * patternY / currentClosest.height);
                 int colorIndex = currentClosest.picture.pattern[pixelX, pixelY];
@@ -738,20 +817,20 @@ namespace ProjektUppgift
                 hitX = (roomHeight - yPosition) * xDirection / yDirection + xPosition;
                 hitZ = (roomHeight - yPosition) * zDirection / yDirection + zPosition;
                 Picture pattern = colorPatternRoof1;
-                double direction = Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
+                float direction = (float)Math.Atan2(hitZ - playerPositionZ, hitX - playerPositionX);
                 if (!(Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2))
                 {
                     hitX = -yPosition * xDirection / yDirection + xPosition;
                     hitZ = -yPosition * zDirection / yDirection + zPosition;
                     pattern = colorPatternFloor1;
                 }
-                if (Math.Abs(hitX) == double.PositiveInfinity)
+                if (Math.Abs(hitX) == float.PositiveInfinity)
                 {
                     hitX = 0;
                     hitZ = 0;
                 }
-                double patternX = Math.Abs(hitX) % 1;
-                double patternY = Math.Abs(hitZ) % 1;
+                float patternX = Math.Abs(hitX) % 1;
+                float patternY = Math.Abs(hitZ) % 1;
                 int pixelX = (int)((pattern.pattern.GetLength(0) - 1) * patternX);
                 int pixelY = (int)((pattern.pattern.GetLength(1) - 1) * patternY);
                 int colorIndex = pattern.pattern[pixelX, pixelY];
@@ -768,11 +847,11 @@ namespace ProjektUppgift
         }
 
         //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
-        public void CalculateRatio(double localXPos, double localYPos, double angle, double angleVertical, out double xDirection, out double yDirection, out double zDirection, out double xPosition, out double yPosition, out double zPosition)
+        public void CalculateRatio(float localXPos, float localYPos, float angle, float angleVertical, out float xDirection, out float yDirection, out float zDirection, out float xPosition, out float yPosition, out float zPosition)
         {
-            double baseYPosition = Math.Cos(angleVertical) * localYPos;
-            double baseXPosition;
-            double baseZPosition;
+            float baseYPosition = (float)Math.Cos(angleVertical) * localYPos;
+            float baseXPosition;
+            float baseZPosition;
             if (angle == 0)
             {
                 baseXPosition = localYPos;
@@ -785,32 +864,32 @@ namespace ProjektUppgift
             }
             //baseXPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + Math.Tan(angle) * Math.Tan(angle));
             //baseZPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + (1 / (Math.Tan(angle) * Math.Tan(angle))));
-            baseXPosition = -Math.Cos(angle) * Math.Sin(angleVertical) * localYPos;
-            baseZPosition = -Math.Sin(angle) * Math.Sin(angleVertical) * localYPos;
-            baseXPosition += localXPos * Math.Sin(angle);
-            baseZPosition += localXPos * -Math.Cos(angle);
-            double projectedXPosition = baseXPosition * imageScale;
-            double projectedYPosition = baseYPosition * imageScale;
-            double projectedZPosition = baseZPosition * imageScale;
-            double a = Math.Tan(angle);
-            double c = Math.Tan(angleVertical);
-            double a2 = a * a;
-            double c2 = c * c;
-            double y = Math.Sin(angleVertical);
-            double h = Math.Sqrt(1 - y * y);
-            double x = Math.Cos(angle) * h;
+            baseXPosition = -(float)Math.Cos(angle) * (float)Math.Sin(angleVertical) * localYPos;
+            baseZPosition = -(float)Math.Sin(angle) * (float)Math.Sin(angleVertical) * localYPos;
+            baseXPosition += localXPos * (float)Math.Sin(angle);
+            baseZPosition += localXPos * -(float)Math.Cos(angle);
+            float projectedXPosition = baseXPosition * imageScale;
+            float projectedYPosition = baseYPosition * imageScale;
+            float projectedZPosition = baseZPosition * imageScale;
+            float a = (float)Math.Tan(angle);
+            float c = (float)Math.Tan(angleVertical);
+            float a2 = a * a;
+            float c2 = c * c;
+            float y = (float)Math.Sin(angleVertical);
+            float h = (float)Math.Sqrt(1 - y * y);
+            float x = (float)Math.Cos(angle) * h;
             //if (angle < 180)
             //{
             //    x = -x;
             //}
-            double z = Math.Sin(angle) * h;
+            float z = (float)Math.Sin(angle) * h;
             //if (angle < 90)
             //{
             //    z = -z;
             //}
-            //double x = 1 / ((1 + a2) * (c2 - 1));
-            //double y = c * x * x * Math.Sqrt(1 + a2);
-            //double z = a * x;
+            //float x = 1 / ((1 + a2) * (c2 - 1));
+            //float y = c * x * x * Math.Sqrt(1 + a2);
+            //float z = a * x;
             projectedXPosition += x;
             projectedYPosition += y;
             projectedZPosition += z;
@@ -820,25 +899,25 @@ namespace ProjektUppgift
             xPosition = baseXPosition + playerPositionX;
             yPosition = baseYPosition + playerPositionY;
             zPosition = baseZPosition + playerPositionZ;
-            //double baseXPosition = localXPos * Math.Sin(angle);
-            //double baseZPosition = localXPos * -Math.Cos(angle);
-            //double baseYPosition = localYPos;
-            //double projectedXPosition = Math.Cos(angle) + baseXPosition * imageScale;
-            //double projectedZPosition = Math.Sin(angle) + baseZPosition * imageScale;
-            //double projectedYPosition = baseYPosition * imageScale;
+            //float baseXPosition = localXPos * Math.Sin(angle);
+            //float baseZPosition = localXPos * -Math.Cos(angle);
+            //float baseYPosition = localYPos;
+            //float projectedXPosition = Math.Cos(angle) + baseXPosition * imageScale;
+            //float projectedZPosition = Math.Sin(angle) + baseZPosition * imageScale;
+            //float projectedYPosition = baseYPosition * imageScale;
             //xDirection = projectedXPosition - baseXPosition;
             //yDirection = projectedYPosition - baseYPosition;
             //zDirection = projectedZPosition - baseZPosition;
             //xPosition = baseXPosition + playerPositionX;
             //yPosition = baseYPosition + playerPositionY;
             //zPosition = baseZPosition + playerPositionZ;
-            //double verticalAngle = Math.Atan2(localYPos * (imageScale - 1), 1) * 180 / Math.PI;
-            //double horizontalAngle = Math.Atan2(localXPos * (imageScale - 1), 1) * 180 / Math.PI + angle;
-            //double a = Math.Tan(verticalAngle * Math.PI / 180);
-            //double c = Math.Tan(horizontalAngle * Math.PI / 180);
-            //double a2 = a * a;
-            //double c2 = c * c;
-            //double d = c2 + a2 * (c2 + 1) + 1;
+            //float verticalAngle = Math.Atan2(localYPos * (imageScale - 1), 1) * 180 / Math.PI;
+            //float horizontalAngle = Math.Atan2(localXPos * (imageScale - 1), 1) * 180 / Math.PI + angle;
+            //float a = Math.Tan(verticalAngle * Math.PI / 180);
+            //float c = Math.Tan(horizontalAngle * Math.PI / 180);
+            //float a2 = a * a;
+            //float c2 = c * c;
+            //float d = c2 + a2 * (c2 + 1) + 1;
             //zDirection = Math.Sqrt(1 / d);
             //yDirection = a * Math.Sqrt(zDirection * zDirection * (c2 + 1));
             //xDirection = c * zDirection;
@@ -984,12 +1063,12 @@ namespace ProjektUppgift
     //Varje pixel förvarar data om åt vilket håll de ska "titta" mot.
     public class Pixel
     {
-        public double angleHorizontal;
-        public double angleVertical;
-        public double xPos;
-        public double yPos;
+        public float angleHorizontal;
+        public float angleVertical;
+        public float xPos;
+        public float yPos;
 
-        public Pixel(double xPos, double yPos)
+        public Pixel(float xPos, float yPos)
         {
 
             this.xPos = xPos;
@@ -1000,32 +1079,32 @@ namespace ProjektUppgift
     //Data om varje vägg.
     public class Face
     {
-        public double direction;
-        public double x1;
-        public double y1;
-        public double z1;
-        public double x2;
-        public double y2;
-        public double z2;
-        public double lowerX;
-        public double lowerZ;
-        public double LowerXZ;
-        public double LowerZX;
-        public double UpperX;
-        public double UpperZ;
-        public double midX;
-        public double midZ;
-        public double zxRatio;
-        public double length;
-        public double height;
+        public float direction;
+        public float x1;
+        public float y1;
+        public float z1;
+        public float x2;
+        public float y2;
+        public float z2;
+        public float lowerX;
+        public float lowerZ;
+        public float LowerXZ;
+        public float LowerZX;
+        public float UpperX;
+        public float UpperZ;
+        public float midX;
+        public float midZ;
+        public float zxRatio;
+        public float length;
+        public float height;
         public Picture picture;
 
-        public (double, double) higherFunction1;
-        public (double, double) higherFunction2;
-        public (double, double) lowerFunction1;
-        public (double, double) lowerFunction2;
+        public (float, float) higherFunction1;
+        public (float, float) higherFunction2;
+        public (float, float) lowerFunction1;
+        public (float, float) lowerFunction2;
 
-        public Face(double direction, double x1, double y1, double z1, double x2, double y2, double z2, Picture picture)
+        public Face(float direction, float x1, float y1, float z1, float x2, float y2, float z2, Picture picture)
         {
             this.direction = direction;
             this.x1 = x1;
@@ -1045,12 +1124,12 @@ namespace ProjektUppgift
             {
                 zxRatio = (z2 - z1) / (x2 - x1);
             }
-            length = Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(z2 - z1, 2));
+            length = (float)Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(z2 - z1, 2));
             height = y2 - y1;
             SetValues();
         }
 
-        public Face(double y, double x1, double z1, double x2, double z2, double x3, double z3, double x4, double z4, Picture picture)
+        public Face(float y, float x1, float z1, float x2, float z2, float x3, float z3, float x4, float z4, Picture picture)
         {
             this.picture = picture;
             y1 = y;
@@ -1059,10 +1138,10 @@ namespace ProjektUppgift
             this.x2 = x3;
             this.z1 = z1;
             this.z2 = z3;
-            length = Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(z2 - z1, 2));
+            length = (float)Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(z2 - z1, 2));
             height = length;
-            double tempk = (z2 - z1) / (x2 - x1);
-            double tempm = z1 - tempk * x1;
+            float tempk = (z2 - z1) / (x2 - x1);
+            float tempm = z1 - tempk * x1;
             if (z1 > z4)
             {
                 higherFunction1 = (tempk, tempm);
@@ -1120,19 +1199,19 @@ namespace ProjektUppgift
 
     public class Object
     {
-        public double positionX;
-        public double positionY = 0.8;
-        public double positionZ;
-        public double angle = Math.PI * 1.5;
+        public float positionX;
+        public float positionY = 0.8f;
+        public float positionZ;
+        public float angle = (float)Math.PI * 1.5f;
         public int difficulty;
         public bool isEnemy;
         public bool isImmobile;
         public Form1 main;
 
-        public Object(int type, double positionX, double positionZ, Form1 main)
+        public Object(int type, float positionX, float positionZ, Form1 main)
         {
-            this.positionX = positionX + 0.5;
-            this.positionZ = positionZ + 0.5;
+            this.positionX = positionX + 0.5f;
+            this.positionZ = positionZ + 0.5f;
             switch (type)
             {
                 case 10:
@@ -1144,7 +1223,7 @@ namespace ProjektUppgift
                     difficulty = 1;
                     isEnemy = true;
                     isImmobile = true;
-                    angle = Math.PI * 1.6;
+                    angle = (float)Math.PI * 1.6f;
                     break;
             }
 
@@ -1160,7 +1239,7 @@ namespace ProjektUppgift
                     
                 }
             }
-            angle += Math.PI / 16;
+            angle += (float)Math.PI / 16;
         }
 
         public Face[] GetFaces()
@@ -1170,52 +1249,52 @@ namespace ProjektUppgift
                 switch (difficulty)
                 {
                     case 1:
-                        return GenerateCuboid(positionX, positionY, positionZ, 0.2, 0.5, angle, new Picture[] { main.colorPatternFloor1, main.colorPatternRoof1, main.colorPatternWall1, main.colorPatternRoof1, main.colorPatternWall1, main.colorPatternWall1 });
+                        return GenerateCuboid(positionX, positionY, positionZ, 0.2f, 0.5f, angle, new Picture[] { main.colorPatternFloor1, main.colorPatternRoof1, main.colorPatternWall1, main.colorPatternRoof1, main.colorPatternWall1, main.colorPatternWall1 });
                 }
             }
             return null;
         }
 
-        public Face[] GenerateCuboid(double xPos, double yPos, double zPos, double height, double length, double angle, Picture[] pictures)
+        public Face[] GenerateCuboid(float xPos, float yPos, float zPos, float height, float length, float angle, Picture[] pictures)
         {
             Face[] toReturn = new Face[6];
             for (int i = 0; i < 4; i++)
             {
-                double relativeXPosition1 = (Math.Cos(angle) + Math.Sin(angle)) * 0.5 * length; //1  //1  //-1
-                double relativeZPosition1 = (Math.Sin(angle) - Math.Cos(angle)) * 0.5 * length; //-1 //1  //1
-                double relativeXPosition2 = (Math.Cos(angle) - Math.Sin(angle)) * 0.5 * length; //1  //-1 //-1
-                double relativeZPosition2 = (Math.Sin(angle) + Math.Cos(angle)) * 0.5 * length; //1  //1  //-1
+                float relativeXPosition1 = (float)(Math.Cos(angle) + (float)Math.Sin(angle)) * 0.5f * length; //1  //1  //-1
+                float relativeZPosition1 = (float)(Math.Sin(angle) - (float)Math.Cos(angle)) * 0.5f * length; //-1 //1  //1
+                float relativeXPosition2 = (float)(Math.Cos(angle) - (float)Math.Sin(angle)) * 0.5f * length; //1  //-1 //-1
+                float relativeZPosition2 = (float)(Math.Sin(angle) + (float)Math.Cos(angle)) * 0.5f * length; //1  //1  //-1
 
-                toReturn[i] = new Face(angle, relativeXPosition1 + xPos, yPos - 0.5 * height, relativeZPosition1 + zPos, relativeXPosition2 + xPos, yPos + 0.5 * height, relativeZPosition2 + zPos, pictures[i]);
-                angle += Math.PI / 2;
+                toReturn[i] = new Face(angle, relativeXPosition1 + xPos, yPos - 0.5f * height, relativeZPosition1 + zPos, relativeXPosition2 + xPos, yPos + 0.5f * height, relativeZPosition2 + zPos, pictures[i]);
+                angle += (float)Math.PI / 2;
                 if (angle >= Math.PI * 2)
                 {
-                    angle -= Math.PI * 2;
+                    angle -= (float)Math.PI * 2;
                 }
             }
             for (int i = 4; i < 6; i++)
             {
-                (double, double) relativePosition1 = GetValuesAndIncreaseAngle();
-                (double, double) relativePosition2 = GetValuesAndIncreaseAngle();
-                (double, double) relativePosition3 = GetValuesAndIncreaseAngle();
-                (double, double) relativePosition4 = GetValuesAndIncreaseAngle();
+                (float, float) relativePosition1 = GetValuesAndIncreaseAngle();
+                (float, float) relativePosition2 = GetValuesAndIncreaseAngle();
+                (float, float) relativePosition3 = GetValuesAndIncreaseAngle();
+                (float, float) relativePosition4 = GetValuesAndIncreaseAngle();
                 if (i == 4)
                 {
-                    toReturn[i] = new Face(yPos + 0.5 * height, xPos + relativePosition1.Item1, zPos + relativePosition1.Item2, xPos + relativePosition2.Item1, zPos + relativePosition2.Item2, xPos + relativePosition3.Item1, zPos + relativePosition3.Item2, xPos + relativePosition4.Item1, zPos + relativePosition4.Item2, pictures[i]);
+                    toReturn[i] = new Face(yPos + 0.5f * height, xPos + relativePosition1.Item1, zPos + relativePosition1.Item2, xPos + relativePosition2.Item1, zPos + relativePosition2.Item2, xPos + relativePosition3.Item1, zPos + relativePosition3.Item2, xPos + relativePosition4.Item1, zPos + relativePosition4.Item2, pictures[i]);
                 }
                 else
                 {
-                    toReturn[i] = new Face(yPos - 0.5 * height, xPos + relativePosition1.Item1, zPos + relativePosition1.Item2, xPos + relativePosition2.Item1, zPos + relativePosition2.Item2, xPos + relativePosition3.Item1, zPos + relativePosition3.Item2, xPos + relativePosition4.Item1, zPos + relativePosition4.Item2, pictures[i]);
+                    toReturn[i] = new Face(yPos - 0.5f * height, xPos + relativePosition1.Item1, zPos + relativePosition1.Item2, xPos + relativePosition2.Item1, zPos + relativePosition2.Item2, xPos + relativePosition3.Item1, zPos + relativePosition3.Item2, xPos + relativePosition4.Item1, zPos + relativePosition4.Item2, pictures[i]);
                 }
             }
-            (double, double) GetValuesAndIncreaseAngle()
+            (float, float) GetValuesAndIncreaseAngle()
             {
-                angle += Math.PI / 2;
+                angle += (float)Math.PI / 2;
                 if (angle >= Math.PI * 2)
                 {
-                    angle -= Math.PI * 2;
+                    angle -= (float)Math.PI * 2;
                 }
-                return ((Math.Cos(angle) + Math.Sin(angle)) * 0.5 * length, (Math.Sin(angle) - Math.Cos(angle)) * 0.5 * length);
+                return ((float)(Math.Cos(angle) + Math.Sin(angle)) * 0.5f * length, (float)(Math.Sin(angle) - Math.Cos(angle)) * 0.5f * length);
             }
             return toReturn;
         }
@@ -1287,5 +1366,23 @@ namespace ProjektUppgift
                     break;
             }
         }
+    }
+
+    public struct FaceOnLine
+    {
+        public float pos1;
+        public float pos2;
+        public Face face;
+        public float x1;
+        public float y1;
+        public float z1;
+        public float x2;
+        public float y2;
+        public float z2;
+    }
+
+    public class Line
+    {
+        public List<FaceOnLine> faces;
     }
 }
