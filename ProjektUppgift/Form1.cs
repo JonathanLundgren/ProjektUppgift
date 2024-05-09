@@ -72,6 +72,10 @@ namespace ProjektUppgift
         readonly int newHeight = height / resolution;
         //En två-dimensionell array med alla pixlar som kan ändras på.
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
+        (float, float) yxRatioUp;
+        (float, float) yxRatioDown;
+        (float, float) zxRatioLeft;
+        (float, float) zxRatioRight;
         //"RoomCodes" är arrayer som beskriver hur rummen ska se ut. Beräkningar utförs senare för att generera rummen på ett sätt som fungerar med resten av koden.
         public Level[] levels = new Level[]
         {
@@ -139,10 +143,16 @@ namespace ProjektUppgift
             {
                 for (int j = 0; j < newHeight; j++)
                 {
-                    pixels[i, j] = new Pixel(imageSize * (i - (newWidth / 2)) / newWidth, imageSize * (j - (newHeight / 2)) / newHeight);
+                    pixels[i, j] = new Pixel(imageSize * (i - (newWidth / 2)) / newWidth, -imageSize * (j - (newHeight / 2)) / newHeight);
                 }
             }
             //StartRoom(testRoomCode);
+            CalculateRatio(-newWidth / 2, -newHeight / 2, 0, 0, out float xDirectionLeftUp, out float yDirectionLeftUp, out float zDirectionLeftUp, out _, out float yPositionleftUp, out float zPositionLeftUp);
+            CalculateRatio(newWidth / 2, newHeight / 2, 0, 0, out float xDirectionRightDown, out float yDirectionRightDown, out float zDirectionRightDown, out _, out float yPositionRightDown, out float zPositionRightDown);
+            yxRatioUp = (yDirectionLeftUp / xDirectionLeftUp, yPositionleftUp);
+            yxRatioDown = (yDirectionRightDown / xDirectionRightDown, yPositionRightDown);
+            zxRatioLeft = (zDirectionLeftUp / xDirectionLeftUp, zPositionLeftUp);
+            zxRatioRight = (zDirectionRightDown / xDirectionRightDown,  zPositionRightDown);
             CreateStartButtons();
             gameScreen.Hide();
         }
@@ -370,7 +380,7 @@ namespace ProjektUppgift
         public void UpdateImage()
         {
             Bitmap bmp = new Bitmap(newWidth, newHeight);
-            //List<Face> simplifiedRoom = SimplifyRoom(currentRoom);
+            SimplifyRoom(currentRoom);
             foreach (Object o in objects)
             {
                 foreach (Face face in o.GetFaces())
@@ -462,15 +472,6 @@ namespace ProjektUppgift
             //return result;
             //y = kx + m
             //m = y - kx
-            CalculateRatio(0, 0, angle, angleVertical, out float xDirectionMiddle, out float yDirectionMiddle, out float zDirectionMiddle, out float xPositionMiddle, out float yPositionMiddle, out float zPositionMiddle);
-            CalculateRatio(-imageSize / 2, -imageSize / 2, angle, angleVertical, out float xDirectionDownLeft, out float yDirectionDownLeft, out float zDirectionDownLeft, out float xPositionDownLeft, out float yPositionDownLeft, out float zPositionDownLeft);
-            CalculateRatio(imageSize / 2, imageSize / 2, angle, angleVertical, out float xDirectionUpRight, out float yDirectionUpRight, out float zDirectionUpRight, out float xPositionUpRight, out float yPositionUpRight, out float zPositionUpRight);
-            (float, float) straightLineLeft = (zDirectionDownLeft / xDirectionDownLeft, zPositionDownLeft - zDirectionDownLeft / xDirectionDownLeft * xPositionDownLeft);
-            (float, float) straightLineRight = (zDirectionUpRight / xDirectionUpRight, zPositionUpRight - zDirectionUpRight / xDirectionUpRight * xPositionUpRight);
-            (float, float) straightLineMiddleHorizontal = (zDirectionMiddle / xDirectionMiddle, zPositionMiddle - zDirectionMiddle / xDirectionMiddle * xPositionMiddle);
-            (float, float) straightLineMiddleVertical = (yDirectionMiddle / xDirectionMiddle, yPositionMiddle - yDirectionMiddle / xDirectionMiddle * xPositionMiddle);
-            (float, float) straightLineUp = (yDirectionUpRight / xDirectionUpRight, yPositionUpRight - yDirectionUpRight / xDirectionUpRight * xPositionUpRight);
-            (float, float) straightLineDown = (yDirectionDownLeft / xDirectionDownLeft, yPositionDownLeft - yDirectionDownLeft / xDirectionDownLeft * xPositionDownLeft);
             Line[] toreturn = new Line[newHeight];
             foreach(Face face in room)
             {
@@ -509,39 +510,81 @@ namespace ProjektUppgift
                     corner4.Item2 = face.y2;
                     corner4.Item3 = face.z2;
                 }
+                pointOnScreen[] points = new pointOnScreen[4];
+                points[0] = new pointOnScreen(GetPosOnScreen(corner1.Item1, corner1.Item2, corner1.Item3));
+                points[1] = new pointOnScreen(GetPosOnScreen(corner2.Item1, corner2.Item2, corner2.Item3));
+                points[2] = new pointOnScreen(GetPosOnScreen(corner3.Item1, corner3.Item2, corner3.Item3));
+                points[3] = new pointOnScreen(GetPosOnScreen(corner4.Item1, corner4.Item2, corner4.Item3));
 
+                StraightLine[] sides = new StraightLine[4];
+                sides[0] = new StraightLine(points[0].x, points[0].y, points[1].x, points[1].y);
+                if (Math.Sign(points[2].y - sides[0].k * points[2].x + sides[0].m) != Math.Sign(points[3].y - sides[0].k * points[3].x + sides[0].m))
+                {
+                    (points[1], points[2]) = (points[2], points[1]);
+                    sides[0] = new StraightLine(points[0].x, points[0].y, points[1].x, points[1].y);
+                }
+                sides[1] = new StraightLine(points[1].x, points[1].y, points[2].x, points[2].y);
+                if (Math.Sign(points[0].y - sides[1].k * points[0].x + sides[1].m) != Math.Sign(points[3].y - sides[1].k * points[3].x + sides[1].m))
+                {
+                    (points[2], points[3]) = (points[3], points[2]);
+                    sides[1] = new StraightLine(points[1].x, points[1].y, points[2].x, points[2].y);
+                }
+                sides[2] = new StraightLine(points[2].x, points[2].y, points[3].x, points[3].y);
+                sides[3] = new StraightLine(points[3].x, points[3].y, points[0].x, points[0].y);
+                int lowest = (int)Math.Min(Math.Min(sides[0].lowerY, sides[1].lowerY), Math.Min(sides[2].lowerY, sides[3].lowerY));
+                if (lowest < 0) { lowest = 0; }
+                int highest = (int)Math.Max(Math.Max(sides[0].upperY, sides[1].upperY), Math.Max(sides[2].upperY, sides[3].upperY));
+                if (highest > toreturn.Length) {  highest = toreturn.Length; }
+                for (int i = lowest; i < highest; i++) 
+                {
+                    float leftBound = float.NaN;
+                    float rightBound = float.NaN;
+                    foreach (StraightLine side in sides)
+                    {
+                        if (i >= side.lowerY && i <= side.upperY)
+                        {
+                            if (leftBound == float.NaN)
+                            {
+                                leftBound = side.k * i + side.m;
+                            }
+                            else if (rightBound == float.NaN)
+                            {
+                                {
+                                    if (side.k * i + side.m != leftBound)
+                                    {
+                                        rightBound = side.k * i + side.m;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (leftBound > rightBound)
+                    {
+                        (leftBound, rightBound) = (rightBound, leftBound);
+                    }
+                    toreturn[i].faces.Add(new FaceOnLine())
+                }
             }
             return null;
 
-            (int, int) GetPosOnScreen(float x, float y, float z)
+            (float, float) GetPosOnScreen(float x, float y, float z)
             {
-                float xPosStraight;
-                float zPosStraight;
+                float relativeX = x - playerPositionX;
+                if (relativeX < 0) { relativeX = 0; }
+                float relativeY = y - playerPositionY;
+                float relativeZ = z - playerPositionZ;
+                float newY = (float)(relativeY * Math.Cos(-angleVertical) + Math.Sqrt(relativeX * relativeX + relativeZ * relativeZ) * Math.Sin(-angleVertical));
+                float halfNewZ = (float)Math.Sqrt((relativeX * relativeX + relativeY * relativeY + relativeZ * relativeZ - newY * newY) / (1 + (relativeX * relativeX) / (relativeZ * relativeZ)));
+                halfNewZ = Math.Abs(halfNewZ) * Math.Sign(relativeZ);
+                float halfNewX = halfNewZ * relativeX / relativeZ;
+                float newX = (float)(halfNewX * Math.Cos(-angle) - halfNewZ * Math.Sin(-angle));
+                float newZ = (float)(halfNewZ * Math.Cos(-angle) +  halfNewX * Math.Sin(-angle));
+
                 float partHorizontal;
                 float partVertical;
-
-                if (Math.Atan2(z - playerPositionZ, x - playerPositionX) % (Math.PI * 2) <= angle)
-                {
-                    //(float, float) parallel = (-1 / straightLineMiddleHorizontal.Item1, z + x / straightLineMiddleHorizontal.Item1);
-                    xPosStraight = (z + x/straightLineMiddleHorizontal.Item1 - straightLineMiddleHorizontal.Item2) / (straightLineMiddleHorizontal.Item1 + 1 / straightLineMiddleHorizontal.Item1);
-                    zPosStraight = straightLineMiddleHorizontal.Item1 * xPosStraight + straightLineMiddleHorizontal.Item2;
-                    float xPosRight = (z + x / straightLineMiddleHorizontal.Item1 - straightLineRight.Item2) / (straightLineRight.Item1 + 1 / straightLineMiddleHorizontal.Item1);
-                    float zPosRight = straightLineRight.Item1 * xPosRight + straightLineRight.Item2;
-                    partHorizontal = (float)Math.Sqrt(((x - xPosStraight) * (x - xPosStraight) + (z - zPosStraight) * (z - zPosStraight)) / ((xPosRight - xPosStraight) * (xPosRight - xPosStraight) + (zPosRight - zPosStraight) * (zPosRight - zPosStraight)));
-                }
-                else
-                {
-                    xPosStraight = (z + x / straightLineMiddleHorizontal.Item1 - straightLineMiddleHorizontal.Item2) / (straightLineMiddleHorizontal.Item1 + 1 / straightLineMiddleHorizontal.Item1);
-                    zPosStraight = straightLineMiddleHorizontal.Item1 * xPosStraight + straightLineMiddleHorizontal.Item2;
-                    float xPosLeft = (z + x / straightLineMiddleHorizontal.Item1 - straightLineLeft.Item2) / (straightLineLeft.Item1 + 1 / straightLineMiddleHorizontal.Item1);
-                    float zPosLeft = straightLineLeft.Item1 * xPosLeft + straightLineLeft.Item2;
-                    partHorizontal = -(float)Math.Sqrt(((x - xPosStraight) * (x - xPosStraight) + (z - zPosStraight) * (z - zPosStraight)) / ((xPosLeft - xPosStraight) * (xPosLeft - xPosStraight) + (zPosLeft - zPosStraight) * (zPosLeft - zPosStraight)));
-                }
-
-                if (Math.Atan2(y - playerPositionY, Math.Sqrt((x - playerPositionX) * (x - playerPositionX) + (z - playerPositionZ) * (z - playerPositionZ))) % (Math.PI * 2) >= angleVertical)
-                {
-                    partVertical = (y - straightLineMiddleVertical.Item1 * xPosStraight + straightLineMiddleVertical.Item2) / ((straightLineUp * xPosStraight))
-                }
+                partHorizontal = (newZ - (zxRatioLeft.Item1 * newX + zxRatioLeft.Item2)) / ((zxRatioRight.Item1 * newX + zxRatioRight.Item2) - (zxRatioLeft.Item1 * newX + zxRatioLeft.Item2));
+                partVertical = (newY - (yxRatioUp.Item1 * newX + yxRatioUp.Item2)) / ((yxRatioDown.Item1 * newX + yxRatioDown.Item2) - (yxRatioUp.Item1 * newX + yxRatioUp.Item2));
+                return(partHorizontal * newWidth, partVertical * newHeight);
             }
         }
 
@@ -856,16 +899,6 @@ namespace ProjektUppgift
             float baseYPosition = (float)Math.Cos(angleVertical) * localYPos;
             float baseXPosition;
             float baseZPosition;
-            if (angle == 0)
-            {
-                baseXPosition = localYPos;
-                baseZPosition = 0;
-            }
-            else if (angle == Math.PI * 0.5)
-            {
-                baseXPosition = 0;
-                baseZPosition = 0;
-            }
             //baseXPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + Math.Tan(angle) * Math.Tan(angle));
             //baseZPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + (1 / (Math.Tan(angle) * Math.Tan(angle))));
             baseXPosition = -(float)Math.Cos(angle) * (float)Math.Sin(angleVertical) * localYPos;
@@ -1057,7 +1090,7 @@ namespace ProjektUppgift
             if (controlCursor)
             {
                 angle -= ((float)Cursor.Position.X - Location.X - width / 2) / 300;
-                angleVertical += ((float)Cursor.Position.Y - Location.Y - height / 2) / 300;
+                angleVertical -= ((float)Cursor.Position.Y - Location.Y - height / 2) / 300;
                 fixAngle();
                 Cursor.Position = new Point(Location.X + width / 2, Location.Y + height / 2);
             }
@@ -1377,12 +1410,61 @@ namespace ProjektUppgift
         public float pos1;
         public float pos2;
         public Face face;
-        public float x1;
-        public float y1;
-        public float z1;
-        public float x2;
-        public float y2;
-        public float z2;
+        public float distance;
+
+        public FaceOnLine(float pos1, float pos2, Face face, float distance)
+        {
+            this.pos1 = pos1;
+            this.pos2 = pos2;
+            this.face = face;
+            this.distance = distance;
+        }
+    }
+
+    public struct pointOnScreen
+    {
+        public float x;
+        public float y;
+        public pointOnScreen((float, float) position)
+        {
+            x = position.Item1;
+            y = position.Item2;
+        }
+    }
+
+    public struct StraightLine
+    {
+        public float k;
+        public float m;
+        public float lowerX;
+        public float upperX;
+        public float lowerY;
+        public float upperY;
+        public StraightLine(float x1, float y1, float x2, float y2)
+        {
+            k = (x2 - x1) / (y2 - y1);
+            m = x1 - k * y1;
+            if (x1 < x2)
+            {
+                lowerX = x1;
+                upperX = x2;
+            }
+            else
+            {
+                lowerX = x2;
+                upperX = x1;
+            }
+            if (y1 < y2)
+            {
+                lowerY = y1;
+                upperY = y2;
+            }
+            else
+            {
+                lowerY = y2;
+                upperY = y2;
+            }
+        }
     }
 
     public class Line
