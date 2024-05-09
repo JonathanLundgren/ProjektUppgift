@@ -468,6 +468,9 @@ namespace ProjektUppgift
             (float, float) straightLineLeft = (zDirectionDownLeft / xDirectionDownLeft, zPositionDownLeft - zDirectionDownLeft / xDirectionDownLeft * xPositionDownLeft);
             (float, float) straightLineRight = (zDirectionUpRight / xDirectionUpRight, zPositionUpRight - zDirectionUpRight / xDirectionUpRight * xPositionUpRight);
             (float, float) straightLineMiddleHorizontal = (zDirectionMiddle / xDirectionMiddle, zPositionMiddle - zDirectionMiddle / xDirectionMiddle * xPositionMiddle);
+            (float, float) straightLineMiddleVertical = (yDirectionMiddle / xDirectionMiddle, yPositionMiddle - yDirectionMiddle / xDirectionMiddle * xPositionMiddle);
+            (float, float) straightLineUp = (yDirectionUpRight / xDirectionUpRight, yPositionUpRight - yDirectionUpRight / xDirectionUpRight * xPositionUpRight);
+            (float, float) straightLineDown = (yDirectionDownLeft / xDirectionDownLeft, yPositionDownLeft - yDirectionDownLeft / xDirectionDownLeft * xPositionDownLeft);
             Line[] toreturn = new Line[newHeight];
             foreach(Face face in room)
             {
@@ -515,6 +518,7 @@ namespace ProjektUppgift
                 float xPosStraight;
                 float zPosStraight;
                 float partHorizontal;
+                float partVertical;
 
                 if (Math.Atan2(z - playerPositionZ, x - playerPositionX) % (Math.PI * 2) <= angle)
                 {
@@ -531,12 +535,12 @@ namespace ProjektUppgift
                     zPosStraight = straightLineMiddleHorizontal.Item1 * xPosStraight + straightLineMiddleHorizontal.Item2;
                     float xPosLeft = (z + x / straightLineMiddleHorizontal.Item1 - straightLineLeft.Item2) / (straightLineLeft.Item1 + 1 / straightLineMiddleHorizontal.Item1);
                     float zPosLeft = straightLineLeft.Item1 * xPosLeft + straightLineLeft.Item2;
-                    partHorizontal = (float)Math.Sqrt(((x - xPosStraight) * (x - xPosStraight) + (z - zPosStraight) * (z - zPosStraight)) / ((xPosLeft - xPosStraight) * (xPosLeft - xPosStraight) + (zPosLeft - zPosStraight) * (zPosLeft - zPosStraight)));
+                    partHorizontal = -(float)Math.Sqrt(((x - xPosStraight) * (x - xPosStraight) + (z - zPosStraight) * (z - zPosStraight)) / ((xPosLeft - xPosStraight) * (xPosLeft - xPosStraight) + (zPosLeft - zPosStraight) * (zPosLeft - zPosStraight)));
                 }
 
                 if (Math.Atan2(y - playerPositionY, Math.Sqrt((x - playerPositionX) * (x - playerPositionX) + (z - playerPositionZ) * (z - playerPositionZ))) % (Math.PI * 2) >= angleVertical)
                 {
-
+                    partVertical = (y - straightLineMiddleVertical.Item1 * xPosStraight + straightLineMiddleVertical.Item2) / ((straightLineUp * xPosStraight))
                 }
             }
         }
