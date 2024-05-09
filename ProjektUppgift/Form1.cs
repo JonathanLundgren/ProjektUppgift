@@ -380,7 +380,7 @@ namespace ProjektUppgift
         public void UpdateImage()
         {
             Bitmap bmp = new Bitmap(newWidth, newHeight);
-            SimplifyRoom(currentRoom);
+            Line[] simplifiedRoom = SimplifyRoom(currentRoom);
             foreach (Object o in objects)
             {
                 foreach (Face face in o.GetFaces())
@@ -393,7 +393,15 @@ namespace ProjektUppgift
             {
                 for (int j = 0; j < newHeight; j++)
                 {
-                    Color color = CalculatePixel(pixels[i, j], currentRoom).Item1;
+                    List<Face> faces = new List<Face>();
+                    foreach(FaceOnLine face in simplifiedRoom[j].faces)
+                    {
+                        if (face.pos1 <= i && face.pos2 >= j)
+                        {
+                            faces.Add(face.face);
+                        }
+                    }
+                    Color color = CalculatePixel(pixels[i, j], faces).Item1;
                     bmp.SetPixel(i, j, color);
                 }
                 //Color[] colors = new Color[newHeight];
@@ -473,6 +481,10 @@ namespace ProjektUppgift
             //y = kx + m
             //m = y - kx
             Line[] toreturn = new Line[newHeight];
+            for (int i = 0; i < newHeight; i++)
+            {
+                toreturn[i] = new Line();
+            }
             foreach(Face face in room)
             {
                 (float, float, float) corner1;
@@ -562,10 +574,15 @@ namespace ProjektUppgift
                     {
                         (leftBound, rightBound) = (rightBound, leftBound);
                     }
-                    toreturn[i].faces.Add(new FaceOnLine())
+                    float distance = ((face.x1 - playerPositionX) * (face.x1 - playerPositionX) + (face.y1 - playerPositionY) * (face.y1 - playerPositionY) + (face.z1 - playerPositionZ) * (face.z1 - playerPositionZ) + (face.x2 - playerPositionX) * (face.x2 - playerPositionX) + (face.y2 - playerPositionY) * (face.y2 - playerPositionY) + (face.z2 - playerPositionZ) * (face.z2 - playerPositionZ)) / 2;
+                    if (toreturn[i] == null)
+                    {
+                        toreturn[i] = new Line();
+                    }
+                    toreturn[i].faces.Add(new FaceOnLine(leftBound, rightBound, face, distance));
                 }
             }
-            return null;
+            return toreturn;
 
             (float, float) GetPosOnScreen(float x, float y, float z)
             {
@@ -1469,6 +1486,6 @@ namespace ProjektUppgift
 
     public class Line
     {
-        public List<FaceOnLine> faces;
+        public List<FaceOnLine> faces = new List<FaceOnLine>();
     }
 }
