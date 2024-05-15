@@ -384,7 +384,6 @@ namespace ProjektUppgift
         //Genererar en bild utifrån alla pixlar som används, och sätter den sedan som den bild som syns.
         public void UpdateImage()
         {
-            currentRoom = testRoomSingleFace;
             Bitmap bmp = new Bitmap(newWidth, newHeight);
             Line[] simplifiedRoom = SimplifyRoom(currentRoom);
             foreach (Object o in objects)
@@ -407,15 +406,8 @@ namespace ProjektUppgift
                             faces.Add(face.face);
                         }
                     }
-                    if (faces.Count > 0)
-                    {
-                        bmp.SetPixel(i, j, Color.Red);
-                    }
-                    else
-                    {
-                        Color color = CalculatePixel(pixels[i, j], faces).Item1;
-                        bmp.SetPixel(i, j, color);
-                    }
+                    Color color = CalculatePixel(pixels[i, j], faces).Item1;
+                    bmp.SetPixel(i, j, color);
                 }
                 //Color[] colors = new Color[newHeight];
                 //for (int j = 0; j < newHeight; j ++)
@@ -543,13 +535,13 @@ namespace ProjektUppgift
 
                 StraightLine[] sides = new StraightLine[4];
                 sides[0] = new StraightLine(points[0].x, points[0].y, points[1].x, points[1].y);
-                if (Math.Sign(points[2].y - (sides[0].k * points[2].x + sides[0].m)) != Math.Sign(points[3].y - (sides[0].k * points[3].x + sides[0].m)))
+                if (Math.Sign(points[2].x - (sides[0].k * points[2].y + sides[0].m)) != Math.Sign(points[3].x - (sides[0].k * points[3].y + sides[0].m)))
                 {
                     (points[1], points[2]) = (points[2], points[1]);
                     sides[0] = new StraightLine(points[0].x, points[0].y, points[1].x, points[1].y);
                 }
                 sides[1] = new StraightLine(points[1].x, points[1].y, points[2].x, points[2].y);
-                if (Math.Sign(points[0].y - (sides[1].k * points[0].x + sides[1].m)) != Math.Sign(points[3].y - (sides[1].k * points[3].x + sides[1].m)))
+                if (Math.Sign(points[0].x - (sides[1].k * points[0].y + sides[1].m)) != Math.Sign(points[3].x - (sides[1].k * points[3].y + sides[1].m)))
                 {
                     (points[2], points[3]) = (points[3], points[2]);
                     sides[1] = new StraightLine(points[1].x, points[1].y, points[2].x, points[2].y);
@@ -611,7 +603,11 @@ namespace ProjektUppgift
                 float halfNewX = (float)(relativeX * Math.Cos(-angle) - relativeZ * Math.Sin(-angle));
                 float newZ = (float)(relativeX * Math.Sin(-angle) + relativeZ * Math.Cos(-angle));
                 float newX = (float)(halfNewX * Math.Cos(-angleVertical) - relativeY * Math.Sin(-angleVertical));
-                float newY = (float)(halfNewX * Math.Sin(-angle) + relativeY * Math.Cos(-angleVertical));
+                if (newX <= 0)
+                {
+                    newX = 0;
+                }
+                float newY = (float)(halfNewX * Math.Sin(-angleVertical) + relativeY * Math.Cos(-angleVertical));
 
                 float partHorizontal;
                 float partVertical;
