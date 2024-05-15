@@ -104,9 +104,9 @@ namespace ProjektUppgift
         public float angle = 0;
         public float angleVertical = 0;
         //Spelarens position.
-        public float playerPositionX = 0f;
-        public float playerPositionY = 0f;
-        public float playerPositionZ = 0f;
+        public float playerPositionX = 0;
+        public float playerPositionY = 0;
+        public float playerPositionZ = 0;
         float wallHitboxSize = 0.2f;
         //Hur högt upp taket är.
         public const float roomHeight = 1;
@@ -131,9 +131,11 @@ namespace ProjektUppgift
         public Picture colorPatternWall1 = new Picture(Properties.Resources.Wall_1);
         public Picture colorPatternRoof1 = new Picture(Properties.Resources.Roof1);
         public Picture colorPatternFloor1 = new Picture(Properties.Resources.Floor1);
+        public List<Face> testRoomSingleFace = new List<Face>(); 
 
         public Form1()
         {
+            testRoomSingleFace.Add(new Face(0, 1, 0, 1, 1, 1, 0, colorPatternWall1));
             InitializeComponent();
             currentRoomCode = testRoomCode;
             gameScreen.ClientSize = new Size(width, height);
@@ -147,14 +149,17 @@ namespace ProjektUppgift
                 }
             }
             //StartRoom(testRoomCode);
-            CalculateRatio(-newWidth / 2, -newHeight / 2, 0, 0, out float xDirectionLeftUp, out float yDirectionLeftUp, out float zDirectionLeftUp, out _, out float yPositionleftUp, out float zPositionLeftUp);
-            CalculateRatio(newWidth / 2, newHeight / 2, 0, 0, out float xDirectionRightDown, out float yDirectionRightDown, out float zDirectionRightDown, out _, out float yPositionRightDown, out float zPositionRightDown);
+            CalculateRatio(pixels[0, newHeight - 1].xPos, pixels[0, newHeight - 1].yPos, 0, 0, out float xDirectionLeftUp, out float yDirectionLeftUp, out float zDirectionLeftUp, out _, out float yPositionleftUp, out float zPositionLeftUp);
+            CalculateRatio(pixels[newWidth - 1, 0].xPos, pixels[newWidth - 1, 0].yPos, 0, 0, out float xDirectionRightDown, out float yDirectionRightDown, out float zDirectionRightDown, out _, out float yPositionRightDown, out float zPositionRightDown);
             yxRatioUp = (yDirectionLeftUp / xDirectionLeftUp, yPositionleftUp);
             yxRatioDown = (yDirectionRightDown / xDirectionRightDown, yPositionRightDown);
             zxRatioLeft = (zDirectionLeftUp / xDirectionLeftUp, zPositionLeftUp);
             zxRatioRight = (zDirectionRightDown / xDirectionRightDown,  zPositionRightDown);
             CreateStartButtons();
             gameScreen.Hide();
+            playerPositionX = 0.5f;
+            playerPositionY = 0.5f;
+            playerPositionZ = 0.5f;
         }
 
         public void CreateStartButtons()
@@ -379,6 +384,7 @@ namespace ProjektUppgift
         //Genererar en bild utifrån alla pixlar som används, och sätter den sedan som den bild som syns.
         public void UpdateImage()
         {
+            currentRoom = testRoomSingleFace;
             Bitmap bmp = new Bitmap(newWidth, newHeight);
             Line[] simplifiedRoom = SimplifyRoom(currentRoom);
             foreach (Object o in objects)
@@ -537,13 +543,13 @@ namespace ProjektUppgift
 
                 StraightLine[] sides = new StraightLine[4];
                 sides[0] = new StraightLine(points[0].x, points[0].y, points[1].x, points[1].y);
-                if (Math.Sign(points[2].y - sides[0].k * points[2].x + sides[0].m) != Math.Sign(points[3].y - sides[0].k * points[3].x + sides[0].m))
+                if (Math.Sign(points[2].y - (sides[0].k * points[2].x + sides[0].m)) != Math.Sign(points[3].y - (sides[0].k * points[3].x + sides[0].m)))
                 {
                     (points[1], points[2]) = (points[2], points[1]);
                     sides[0] = new StraightLine(points[0].x, points[0].y, points[1].x, points[1].y);
                 }
                 sides[1] = new StraightLine(points[1].x, points[1].y, points[2].x, points[2].y);
-                if (Math.Sign(points[0].y - sides[1].k * points[0].x + sides[1].m) != Math.Sign(points[3].y - sides[1].k * points[3].x + sides[1].m))
+                if (Math.Sign(points[0].y - (sides[1].k * points[0].x + sides[1].m)) != Math.Sign(points[3].y - (sides[1].k * points[3].x + sides[1].m)))
                 {
                     (points[2], points[3]) = (points[3], points[2]);
                     sides[1] = new StraightLine(points[1].x, points[1].y, points[2].x, points[2].y);
@@ -596,12 +602,16 @@ namespace ProjektUppgift
                 float relativeX = x - playerPositionX;
                 float relativeY = y - playerPositionY;
                 float relativeZ = z - playerPositionZ;
-                float newY = (float)(relativeY * Math.Cos(-angleVertical) + Math.Sqrt(relativeX * relativeX + relativeZ * relativeZ) * Math.Sin(-angleVertical));
-                float halfNewZ = (float)Math.Sqrt((relativeX * relativeX + relativeY * relativeY + relativeZ * relativeZ - newY * newY) / (1 + (relativeX * relativeX) / (relativeZ * relativeZ)));
-                halfNewZ = Math.Abs(halfNewZ) * Math.Sign(relativeZ);
-                float halfNewX = halfNewZ * relativeX / relativeZ;
-                float newX = (float)(halfNewX * Math.Cos(-angle) - halfNewZ * Math.Sin(-angle));
-                float newZ = (float)(halfNewZ * Math.Cos(-angle) +  halfNewX * Math.Sin(-angle));
+                //float newY = (float)(relativeY * Math.Cos(-angleVertical) + Math.Sqrt(relativeX * relativeX + relativeZ * relativeZ) * Math.Sin(-angleVertical));
+                //float halfNewZ = (float)Math.Sqrt((relativeX * relativeX + relativeY * relativeY + relativeZ * relativeZ - newY * newY) / (1 + (relativeX * relativeX) / (relativeZ * relativeZ)));
+                //halfNewZ = Math.Abs(halfNewZ) * Math.Sign(relativeZ);
+                //float halfNewX = halfNewZ * relativeX / relativeZ;
+                //float newX = (float)(halfNewX * Math.Cos(-angle) - halfNewZ * Math.Sin(-angle));
+                //float newZ = (float)(halfNewZ * Math.Cos(-angle) +  halfNewX * Math.Sin(-angle));
+                float halfNewX = (float)(relativeX * Math.Cos(-angle) - relativeZ * Math.Sin(-angle));
+                float newZ = (float)(relativeX * Math.Sin(-angle) + relativeZ * Math.Cos(-angle));
+                float newX = (float)(halfNewX * Math.Cos(-angleVertical) - relativeY * Math.Sin(-angleVertical));
+                float newY = (float)(halfNewX * Math.Sin(-angle) + relativeY * Math.Cos(-angleVertical));
 
                 float partHorizontal;
                 float partVertical;
@@ -1465,7 +1475,14 @@ namespace ProjektUppgift
         public float upperY;
         public StraightLine(float x1, float y1, float x2, float y2)
         {
-            k = (x2 - x1) / (y2 - y1);
+            if (y2 == y1)
+            {
+                k = 0.001f;
+            }
+            else
+            {
+                k = (x2 - x1) / (y2 - y1);
+            }
             m = x1 - k * y1;
             if (x1 < x2)
             {
