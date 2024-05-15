@@ -54,6 +54,7 @@ Log :
 05/03 Fixade rendrings-bugg. Väggar kan nu ha fler vinklar än multiplar av 90 grader, och det går nu göra topp och botten på kuber.
 05/04 Det går nu att titta lite uppåt och nedåt.
 05/08 Jobbade med matematik som kommer att behövas.
+05/15 Jobbade med optimiseringar.
 
 */
 namespace ProjektUppgift
