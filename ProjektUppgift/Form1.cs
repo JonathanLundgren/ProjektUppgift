@@ -104,9 +104,9 @@ namespace ProjektUppgift
         public float angle = 0;
         public float angleVertical = 0;
         //Spelarens position.
-        public float playerPositionX = 0.5f;
-        public float playerPositionY = 0.5f;
-        public float playerPositionZ = 0.5f;
+        public float playerPositionX = 0f;
+        public float playerPositionY = 0f;
+        public float playerPositionZ = 0f;
         float wallHitboxSize = 0.2f;
         //Hur högt upp taket är.
         public const float roomHeight = 1;
@@ -396,13 +396,20 @@ namespace ProjektUppgift
                     List<Face> faces = new List<Face>();
                     foreach(FaceOnLine face in simplifiedRoom[j].faces)
                     {
-                        if (face.pos1 <= i && face.pos2 >= j)
+                        if (face.pos1 <= i && face.pos2 >= i)
                         {
                             faces.Add(face.face);
                         }
                     }
-                    Color color = CalculatePixel(pixels[i, j], faces).Item1;
-                    bmp.SetPixel(i, j, color);
+                    if (faces.Count > 0)
+                    {
+                        bmp.SetPixel(i, j, Color.Red);
+                    }
+                    else
+                    {
+                        Color color = CalculatePixel(pixels[i, j], faces).Item1;
+                        bmp.SetPixel(i, j, color);
+                    }
                 }
                 //Color[] colors = new Color[newHeight];
                 //for (int j = 0; j < newHeight; j ++)
@@ -555,11 +562,11 @@ namespace ProjektUppgift
                     {
                         if (i >= side.lowerY && i <= side.upperY)
                         {
-                            if (leftBound == float.NaN)
+                            if (leftBound != leftBound)
                             {
                                 leftBound = side.k * i + side.m;
                             }
-                            else if (rightBound == float.NaN)
+                            else if (rightBound != rightBound)
                             {
                                 {
                                     if (side.k * i + side.m != leftBound)
@@ -587,7 +594,6 @@ namespace ProjektUppgift
             (float, float) GetPosOnScreen(float x, float y, float z)
             {
                 float relativeX = x - playerPositionX;
-                if (relativeX < 0) { relativeX = 0; }
                 float relativeY = y - playerPositionY;
                 float relativeZ = z - playerPositionZ;
                 float newY = (float)(relativeY * Math.Cos(-angleVertical) + Math.Sqrt(relativeX * relativeX + relativeZ * relativeZ) * Math.Sin(-angleVertical));
@@ -1034,7 +1040,7 @@ namespace ProjektUppgift
         private void FixCursor()
         {
             Cursor.Clip = new Rectangle(Bounds.X + 30, Bounds.Y + 50, Bounds.Width - 60, Bounds.Height - 80);
-            controlCursor = true;
+            //controlCursor = true;
             if (!isCursorHidden)
             {
                 Cursor.Hide();
@@ -1479,7 +1485,7 @@ namespace ProjektUppgift
             else
             {
                 lowerY = y2;
-                upperY = y2;
+                upperY = y1;
             }
         }
     }
