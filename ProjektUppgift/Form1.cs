@@ -55,6 +55,7 @@ Log :
 05/04 Det går nu att titta lite uppåt och nedåt.
 05/08 Jobbade med matematik som kommer att behövas.
 05/15 Jobbade med optimiseringar.
+05/16 Fortsatte med optimiseringar.
 
 */
 namespace ProjektUppgift
@@ -132,11 +133,15 @@ namespace ProjektUppgift
         public Picture colorPatternWall1 = new Picture(Properties.Resources.Wall_1);
         public Picture colorPatternRoof1 = new Picture(Properties.Resources.Roof1);
         public Picture colorPatternFloor1 = new Picture(Properties.Resources.Floor1);
+
+        //För testning
         public List<Face> testRoomSingleFace = new List<Face>(); 
 
         public Form1()
         {
+            //För testning
             testRoomSingleFace.Add(new Face(0, 1, 0, 1, 1, 1, 0, colorPatternWall1));
+
             InitializeComponent();
             currentRoomCode = testRoomCode;
             gameScreen.ClientSize = new Size(width, height);
@@ -385,6 +390,9 @@ namespace ProjektUppgift
         //Genererar en bild utifrån alla pixlar som används, och sätter den sedan som den bild som syns.
         public void UpdateImage()
         {
+            //För testning
+            currentRoom = testRoomSingleFace;
+
             Bitmap bmp = new Bitmap(newWidth, newHeight);
             Line[] simplifiedRoom = SimplifyRoom(currentRoom);
             foreach (Object o in objects)
@@ -407,8 +415,26 @@ namespace ProjektUppgift
                             faces.Add(face.face);
                         }
                     }
-                    Color color = CalculatePixel(pixels[i, j], faces).Item1;
+
+                    //För testning
+                    Color color;
+                    if (faces.Count > 0)
+                    {
+                        color = Color.Red;
+                        if (CalculatePixel(pixels[i, j], faces).Item2 != null)
+                        {
+                            color = Color.Purple;
+                        }
+                    }
+                    else
+                    {
+                        color = CalculatePixel(pixels[i, j], faces).Item1;
+                    }
                     bmp.SetPixel(i, j, color);
+
+                    //Vanlig kod som inte används under testning
+                    //Color color = CalculatePixel(pixels[i, j], faces).Item1;
+                    //bmp.SetPixel(i, j, color);
                 }
                 //Color[] colors = new Color[newHeight];
                 //for (int j = 0; j < newHeight; j ++)
@@ -604,15 +630,28 @@ namespace ProjektUppgift
                 float halfNewX = (float)(relativeX * Math.Cos(-angle) - relativeZ * Math.Sin(-angle));
                 float newZ = (float)(relativeX * Math.Sin(-angle) + relativeZ * Math.Cos(-angle));
                 float newX = (float)(halfNewX * Math.Cos(-angleVertical) - relativeY * Math.Sin(-angleVertical));
-                if (newX <= 0)
-                {
-                    newX = 0;
-                }
                 float newY = (float)(halfNewX * Math.Sin(-angleVertical) + relativeY * Math.Cos(-angleVertical));
+
+                //if (newX > 0)
+                //{
+                //    newZ = (float)(newZ / (imageScale * newX));
+                //    newY = (float)(newY / (imageScale * newX));
+                //}
+                //else if (newX < 0)
+                //{
+                //    newZ = (float)(newZ * (imageScale * -newX));
+                //    newY = (float)(newY * (imageScale * -newX));
+                //}
+                //newX = 0;
+                float leftBound = zxRatioLeft.Item1 * newX + zxRatioLeft.Item2;
+                float rightBound = zxRatioRight.Item1 * newX + zxRatioRight.Item2;
+                newZ = ((newZ - leftBound) * (zxRatioRight.Item2 - zxRatioLeft.Item2) / (rightBound - leftBound)) + zxRatioLeft.Item2;
+                newY = ((newY - (yxRatioUp.Item1 * newX + yxRatioUp.Item2)) * (yxRatioDown.Item2 - yxRatioUp.Item2)) / ((yxRatioDown.Item1 - yxRatioUp.Item1) * newX + yxRatioDown.Item2 - yxRatioUp.Item2) + yxRatioUp.Item2;
+                newX = 0;
 
                 float partHorizontal;
                 float partVertical;
-                partHorizontal = (newZ - (zxRatioLeft.Item1 * newX + zxRatioLeft.Item2)) / ((zxRatioRight.Item1 * newX + zxRatioRight.Item2) - (zxRatioLeft.Item1 * newX + zxRatioLeft.Item2));
+                partHorizontal = (newZ - leftBound) / (rightBound - leftBound);
                 partVertical = (newY - (yxRatioUp.Item1 * newX + yxRatioUp.Item2)) / ((yxRatioDown.Item1 * newX + yxRatioDown.Item2) - (yxRatioUp.Item1 * newX + yxRatioUp.Item2));
                 return(partHorizontal * newWidth, partVertical * newHeight);
             }
@@ -938,10 +977,6 @@ namespace ProjektUppgift
             float projectedXPosition = baseXPosition * imageScale;
             float projectedYPosition = baseYPosition * imageScale;
             float projectedZPosition = baseZPosition * imageScale;
-            float a = (float)Math.Tan(angle);
-            float c = (float)Math.Tan(angleVertical);
-            float a2 = a * a;
-            float c2 = c * c;
             float y = (float)Math.Sin(angleVertical);
             float h = (float)Math.Sqrt(1 - y * y);
             float x = (float)Math.Cos(angle) * h;
