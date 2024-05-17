@@ -135,7 +135,7 @@ namespace ProjektUppgift
         public Picture colorPatternFloor1 = new Picture(Properties.Resources.Floor1);
 
         //För testning
-        public List<Face> testRoomSingleFace = new List<Face>(); 
+        public List<Face> testRoomSingleFace = new List<Face>();
 
         public Form1()
         {
@@ -160,7 +160,7 @@ namespace ProjektUppgift
             yxRatioUp = (yDirectionLeftUp / xDirectionLeftUp, yPositionleftUp);
             yxRatioDown = (yDirectionRightDown / xDirectionRightDown, yPositionRightDown);
             zxRatioLeft = (zDirectionLeftUp / xDirectionLeftUp, zPositionLeftUp);
-            zxRatioRight = (zDirectionRightDown / xDirectionRightDown,  zPositionRightDown);
+            zxRatioRight = (zDirectionRightDown / xDirectionRightDown, zPositionRightDown);
             CreateStartButtons();
             gameScreen.Hide();
             playerPositionX = 0.5f;
@@ -405,12 +405,12 @@ namespace ProjektUppgift
                 }
             }
             //Color[] previouslayer = null;
-            for (int i = 0; i < newWidth; i ++)
+            for (int i = 0; i < newWidth; i++)
             {
                 for (int j = 0; j < newHeight; j++)
                 {
                     List<Face> faces = new List<Face>();
-                    foreach(FaceOnLine face in simplifiedRoom[j].faces)
+                    foreach (FaceOnLine face in simplifiedRoom[j].faces)
                     {
                         if (face.pos1 <= i && face.pos2 >= i)
                         {
@@ -500,6 +500,19 @@ namespace ProjektUppgift
             return CalculateLine(xDirection, yDirection, zDirection, xPosition, yPosition, zPosition, room);
         }
 
+        public int RotateInList (int newIndex, int length)
+        {
+            while (newIndex < 0) 
+            {
+                newIndex += length;
+            }
+            while (newIndex >= length) 
+            {
+                newIndex -= length;
+            }
+            return newIndex;
+        }
+
         public Line[] SimplifyRoom(List<Face> room)
         {
             //List<Face> result = new List<Face>();
@@ -519,7 +532,7 @@ namespace ProjektUppgift
             {
                 toreturn[i] = new Line();
             }
-            foreach(Face face in room)
+            foreach (Face face in room)
             {
                 (float, float, float) corner1;
                 (float, float, float) corner2;
@@ -546,16 +559,58 @@ namespace ProjektUppgift
                 };
 
                 int xLessThanZeroCount = 0;
+                List<pointOnScreen> postiveXPoints = new List<pointOnScreen>();
+                List<pointOnScreen> negativeXPoints = new List<pointOnScreen>();
                 foreach (pointOnScreen pointOnScreen in points)
                 {
                     if (pointOnScreen.relativeCamPosX < 0)
                     {
                         xLessThanZeroCount++;
+                        negativeXPoints.Add(pointOnScreen);
+                    }
+                    else
+                    {
+                        postiveXPoints.Add(pointOnScreen);
                     }
                 }
                 if (xLessThanZeroCount >= 4)
                 {
                     break;
+                }
+                else if (xLessThanZeroCount == 3)
+                {
+                    int previousPoint = RotateInList(points.IndexOf(postiveXPoints[0]) - 1, points.Count);
+                    int nextPoint = RotateInList(points.IndexOf(postiveXPoints[0]) + 1, points.Count);
+                    (float, float, float) newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[previousPoint]);
+                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                    newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[nextPoint]);
+                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                }
+                else if (xLessThanZeroCount == 2)
+                {
+                    foreach (pointOnScreen point in negativeXPoints) 
+                    {
+                        pointOnScreen connectingPoint;
+                        if (points[RotateInList(points.IndexOf(point) - 1, points.Count)].x >= 0)
+                        {
+                            connectingPoint = points[RotateInList(points.IndexOf(point) - 1, points.Count)];
+                        }
+                        else
+                        {
+                            connectingPoint = points[RotateInList(points.IndexOf(point) + 1, points.Count)];
+                        }
+                        (float, float, float) newPoint = CalculateZeroXBetweenPoints(point, connectingPoint);
+                        points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                    }
+                }
+                else if (xLessThanZeroCount == 1)
+                {
+                    int previousPoint = RotateInList(points.IndexOf(negativeXPoints[0]) - 1, points.Count);
+                    int nextPoint = RotateInList(points.IndexOf(negativeXPoints[0]) + 1, points.Count);
+                    (float, float, float) newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], points[previousPoint]);
+                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                    newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], points[nextPoint]);
+                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
                 }
 
 
@@ -567,14 +622,14 @@ namespace ProjektUppgift
                 sides[points.Count - 1] = new StraightLine(points[points.Count - 1].x, points[points.Count - 1].y, points[0].x, points[0].y);
                 int lowest = int.MaxValue;
                 int highest = int.MinValue;
-                foreach(StraightLine side in sides)
+                foreach (StraightLine side in sides)
                 {
                     lowest = (int)Math.Min(lowest, side.lowerY);
                     highest = (int)Math.Max(highest, side.upperY);
                 }
                 if (lowest < 0) { lowest = 0; }
-                if (highest > toreturn.Length) {  highest = toreturn.Length; }
-                for (int i = lowest; i < highest; i++) 
+                if (highest > toreturn.Length) { highest = toreturn.Length; }
+                for (int i = lowest; i < highest; i++)
                 {
                     float leftBound = float.NaN;
                     float rightBound = float.NaN;
@@ -645,7 +700,7 @@ namespace ProjektUppgift
                 float partVertical;
                 partHorizontal = (newZ - leftBound) / (rightBound - leftBound);
                 partVertical = (newY - (yxRatioUp.Item1 * newX + yxRatioUp.Item2)) / ((yxRatioDown.Item1 * newX + yxRatioDown.Item2) - (yxRatioUp.Item1 * newX + yxRatioUp.Item2));
-                return(partHorizontal * newWidth, partVertical * newHeight, newX, newY, newZ);
+                return (partHorizontal * newWidth, partVertical * newHeight, newX, newY, newZ);
             }
 
             (float, float, float) CalculateZeroXBetweenPoints(pointOnScreen point1, pointOnScreen point2)
@@ -654,7 +709,7 @@ namespace ProjektUppgift
                 float zPos = point1.relativeCamPosZ - k * point1.relativeCamPosX;
                 k = (point2.relativeCamPosY - point1.relativeCamPosZ) / (point2.relativeCamPosY - point1.relativeCamPosX);
                 float yPos = point1.relativeCamPosY - k * point1.relativeCamPosX;
-                return (0,  yPos, zPos);
+                return (0, yPos, zPos);
             }
         }
 
@@ -696,10 +751,10 @@ namespace ProjektUppgift
                 }
                 else if (face.y1 == face.y3)
                 {
-                    if (face.higherFunction1.Item1 == 0 || face.higherFunction2.Item1 == 0 || face.lowerFunction1.Item1 == 0 || face.lowerFunction2.Item1 == 0) 
+                    if (face.higherFunction1.Item1 == 0 || face.higherFunction2.Item1 == 0 || face.lowerFunction1.Item1 == 0 || face.lowerFunction2.Item1 == 0)
                     {
-                    hitY = face.y1;
-                    hitX = (hitY * (xDirection / yDirection) + xPosition) - ((xDirection / yDirection) * yPosition);
+                        hitY = face.y1;
+                        hitX = (hitY * (xDirection / yDirection) + xPosition) - ((xDirection / yDirection) * yPosition);
                         if (hitX <= face.UpperX && hitX >= face.lowerX)
                         {
                             hitZ = (hitY * (zDirection / yDirection) + zPosition) - ((zDirection / yDirection) * yPosition);
@@ -727,7 +782,7 @@ namespace ProjektUppgift
                             }
                         }
                     }
-                    else 
+                    else
                     {
                         hitY = face.y1;
                         hitX = (hitY * (xDirection / yDirection) + xPosition) - ((xDirection / yDirection) * yPosition);
@@ -1112,7 +1167,7 @@ namespace ProjektUppgift
             {
                 angle -= 2 * (float)Math.PI;
             }
-            while(angleVertical < 0)
+            while (angleVertical < 0)
             {
                 angleVertical += 2 * (float)Math.PI;
             }
@@ -1288,7 +1343,7 @@ namespace ProjektUppgift
             SetValues();
 
         }
-        
+
         public void SetValues()
         {
             if (x1 < x3)
@@ -1357,7 +1412,7 @@ namespace ProjektUppgift
             {
                 if (main.CalculateLine(main.playerPositionX - positionX, 0, main.playerPositionZ - positionZ, positionX, Form1.roomHeight / 2, positionZ, main.currentRoom).Item2 != null)
                 {
-                    
+
                 }
             }
             angle += (float)Math.PI / 16;
