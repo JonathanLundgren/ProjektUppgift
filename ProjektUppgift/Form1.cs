@@ -56,6 +56,7 @@ Log :
 05/08 Jobbade med matematik som kommer att behövas.
 05/15 Jobbade med optimiseringar.
 05/16 Fortsatte med optimiseringar.
+05/24 Fortsatte med optimiseringar.
 
 */
 namespace ProjektUppgift
@@ -552,10 +553,10 @@ namespace ProjektUppgift
                 corner4.Item3 = face.z4;
                 List<pointOnScreen> points = new List<pointOnScreen>
                 {
-                    new pointOnScreen(GetPosOnScreen(corner1.Item1, corner1.Item2, corner1.Item3)),
-                    new pointOnScreen(GetPosOnScreen(corner2.Item1, corner2.Item2, corner2.Item3)),
-                    new pointOnScreen(GetPosOnScreen(corner3.Item1, corner3.Item2, corner3.Item3)),
-                    new pointOnScreen(GetPosOnScreen(corner4.Item1, corner4.Item2, corner4.Item3))
+                    new pointOnScreen(GetPosOnScreen(corner1.Item1, corner1.Item2, corner1.Item3, false)),
+                    new pointOnScreen(GetPosOnScreen(corner2.Item1, corner2.Item2, corner2.Item3, false)),
+                    new pointOnScreen(GetPosOnScreen(corner3.Item1, corner3.Item2, corner3.Item3, false)),
+                    new pointOnScreen(GetPosOnScreen(corner4.Item1, corner4.Item2, corner4.Item3, false))
                 };
 
                 int xLessThanZeroCount = 0;
@@ -582,14 +583,16 @@ namespace ProjektUppgift
                     int previousPoint = RotateInList(points.IndexOf(postiveXPoints[0]) - 1, points.Count);
                     int nextPoint = RotateInList(points.IndexOf(postiveXPoints[0]) + 1, points.Count);
                     (float, float, float) newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[previousPoint]);
-                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
                     newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[nextPoint]);
-                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
                 }
                 else if (xLessThanZeroCount == 2)
                 {
-                    foreach (pointOnScreen point in negativeXPoints) 
+                    (float, float, float)[] newPoints = new (float, float, float)[2];
+                    for (int i = 0; i < 2; i++) 
                     {
+                        pointOnScreen point = negativeXPoints[i];
                         pointOnScreen connectingPoint;
                         if (points[RotateInList(points.IndexOf(point) - 1, points.Count)].x >= 0)
                         {
@@ -599,8 +602,17 @@ namespace ProjektUppgift
                         {
                             connectingPoint = points[RotateInList(points.IndexOf(point) + 1, points.Count)];
                         }
-                        (float, float, float) newPoint = CalculateZeroXBetweenPoints(point, connectingPoint);
-                        points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                        newPoints[i] = CalculateZeroXBetweenPoints(point, connectingPoint);
+                        //points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                        //int index = points.IndexOf(point);
+                        //points.RemoveAt(index);
+                        //points.Insert(index, new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                    }
+                    for (int i = 0; i < 2; i++)
+                    {
+                        int index = points.IndexOf(negativeXPoints[i]);
+                        points.RemoveAt(index);
+                        points.Insert(index, new pointOnScreen(GetPosOnScreen(newPoints[i].Item1, newPoints[i].Item2, newPoints[i].Item3, true)));
                     }
                 }
                 else if (xLessThanZeroCount == 1)
@@ -608,10 +620,17 @@ namespace ProjektUppgift
                     int previousPoint = RotateInList(points.IndexOf(negativeXPoints[0]) - 1, points.Count);
                     int nextPoint = RotateInList(points.IndexOf(negativeXPoints[0]) + 1, points.Count);
                     (float, float, float) newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], points[previousPoint]);
-                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+
+                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
                     newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], points[nextPoint]);
-                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
+                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
                 }
+                foreach (pointOnScreen point in negativeXPoints)
+                {
+                    points.Remove(point);
+                }
+                negativeXPoints.Clear();
+                postiveXPoints.Clear();
 
 
                 StraightLine[] sides = new StraightLine[points.Count];
@@ -666,21 +685,34 @@ namespace ProjektUppgift
             }
             return toreturn;
 
-            (float, float, float, float, float) GetPosOnScreen(float x, float y, float z)
+            (float, float, float, float, float) GetPosOnScreen(float x, float y, float z, bool alreadymodified)
             {
-                float relativeX = x - playerPositionX;
-                float relativeY = y - playerPositionY;
-                float relativeZ = z - playerPositionZ;
-                //float newY = (float)(relativeY * Math.Cos(-angleVertical) + Math.Sqrt(relativeX * relativeX + relativeZ * relativeZ) * Math.Sin(-angleVertical));
-                //float halfNewZ = (float)Math.Sqrt((relativeX * relativeX + relativeY * relativeY + relativeZ * relativeZ - newY * newY) / (1 + (relativeX * relativeX) / (relativeZ * relativeZ)));
-                //halfNewZ = Math.Abs(halfNewZ) * Math.Sign(relativeZ);
-                //float halfNewX = halfNewZ * relativeX / relativeZ;
-                //float newX = (float)(halfNewX * Math.Cos(-angle) - halfNewZ * Math.Sin(-angle));
-                //float newZ = (float)(halfNewZ * Math.Cos(-angle) +  halfNewX * Math.Sin(-angle));
-                float halfNewX = (float)(relativeX * Math.Cos(-angle) - relativeZ * Math.Sin(-angle));
-                float newZ = (float)(relativeX * Math.Sin(-angle) + relativeZ * Math.Cos(-angle));
-                float newX = (float)(halfNewX * Math.Cos(-angleVertical) - relativeY * Math.Sin(-angleVertical));
-                float newY = (float)(halfNewX * Math.Sin(-angleVertical) + relativeY * Math.Cos(-angleVertical));
+                float newX;
+                float newY;
+                float newZ;
+
+                if (alreadymodified)
+                {
+                    newX = x;
+                    newY = y;
+                    newZ = z;
+                }
+                else
+                {
+                    float relativeX = x - playerPositionX;
+                    float relativeY = y - playerPositionY;
+                    float relativeZ = z - playerPositionZ;
+                    //float newY = (float)(relativeY * Math.Cos(-angleVertical) + Math.Sqrt(relativeX * relativeX + relativeZ * relativeZ) * Math.Sin(-angleVertical));
+                    //float halfNewZ = (float)Math.Sqrt((relativeX * relativeX + relativeY * relativeY + relativeZ * relativeZ - newY * newY) / (1 + (relativeX * relativeX) / (relativeZ * relativeZ)));
+                    //halfNewZ = Math.Abs(halfNewZ) * Math.Sign(relativeZ);
+                    //float halfNewX = halfNewZ * relativeX / relativeZ;
+                    //float newX = (float)(halfNewX * Math.Cos(-angle) - halfNewZ * Math.Sin(-angle));
+                    //float newZ = (float)(halfNewZ * Math.Cos(-angle) +  halfNewX * Math.Sin(-angle));
+                    float halfNewX = (float)(relativeX * Math.Cos(-angle) - relativeZ * Math.Sin(-angle));
+                    newZ = (float)(relativeX * Math.Sin(-angle) + relativeZ * Math.Cos(-angle));
+                    newX = (float)(halfNewX * Math.Cos(-angleVertical) - relativeY * Math.Sin(-angleVertical));
+                    newY = (float)(halfNewX * Math.Sin(-angleVertical) + relativeY * Math.Cos(-angleVertical));
+                }
 
                 //if (newX > 0)
                 //{
@@ -707,7 +739,7 @@ namespace ProjektUppgift
             {
                 float k = (point2.relativeCamPosZ - point1.relativeCamPosZ) / (point2.relativeCamPosX - point1.relativeCamPosX);
                 float zPos = point1.relativeCamPosZ - k * point1.relativeCamPosX;
-                k = (point2.relativeCamPosY - point1.relativeCamPosZ) / (point2.relativeCamPosY - point1.relativeCamPosX);
+                k = (point2.relativeCamPosY - point1.relativeCamPosY) / (point2.relativeCamPosX - point1.relativeCamPosX);
                 float yPos = point1.relativeCamPosY - k * point1.relativeCamPosX;
                 return (0, yPos, zPos);
             }
