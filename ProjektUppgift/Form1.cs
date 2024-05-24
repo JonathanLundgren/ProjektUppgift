@@ -135,13 +135,8 @@ namespace ProjektUppgift
         public Picture colorPatternRoof1 = new Picture(Properties.Resources.Roof1);
         public Picture colorPatternFloor1 = new Picture(Properties.Resources.Floor1);
 
-        //För testning
-        public List<Face> testRoomSingleFace = new List<Face>();
-
         public Form1()
         {
-            //För testning
-            testRoomSingleFace.Add(new Face(0, 1, 0, 1, 1, 1, 0, colorPatternWall1));
 
             InitializeComponent();
             currentRoomCode = testRoomCode;
@@ -303,30 +298,30 @@ namespace ProjektUppgift
                     }
                 }
             }
-            int k = 0;
-            while (k < room.Count)
-            {
-                int l = k;
-                while (l < room.Count)
-                {
-                    if (room[l].x1 == room[k].x3 && room[l].z1 == room[k].z3 && room[k].direction == room[l].direction)
-                    {
-                        room[k].x3 = room[l].x3;
-                        room[k].z3 = room[l].z3;
-                        room[k].x4 = room[l].x4;
-                        room[k].z4 = room[l].z4;
-                        room[k].SetValues();
-                        room.RemoveAt(l);
-                        if (l < k)
-                        {
-                            k -= 1;
-                        }
-                        l -= 1;
-                    }
-                    l++;
-                }
-                k++;
-            }
+            //int k = 0;
+            //while (k < room.Count)
+            //{
+            //    int l = k;
+            //    while (l < room.Count)
+            //    {
+            //        if (room[l].x1 == room[k].x3 && room[l].z1 == room[k].z3 && room[k].direction == room[l].direction)
+            //        {
+            //            room[k].x3 = room[l].x3;
+            //            room[k].z3 = room[l].z3;
+            //            room[k].x4 = room[l].x4;
+            //            room[k].z4 = room[l].z4;
+            //            room[k].SetValues();
+            //            room.RemoveAt(l);
+            //            if (l < k)
+            //            {
+            //                k -= 1;
+            //            }
+            //            l -= 1;
+            //        }
+            //        l++;
+            //    }
+            //    k++;
+            //}
             return room;
         }
 
@@ -393,8 +388,6 @@ namespace ProjektUppgift
         //Genererar en bild utifrån alla pixlar som används, och sätter den sedan som den bild som syns.
         public void UpdateImage()
         {
-            //För testning
-            currentRoom = testRoomSingleFace;
 
             Bitmap bmp = new Bitmap(newWidth, newHeight);
             Line[] simplifiedRoom = SimplifyRoom(currentRoom);
@@ -621,8 +614,7 @@ namespace ProjektUppgift
                     for (int i = 0; i < 2; i++)
                     {
                         int index = points.IndexOf(negativeXPoints[i]);
-                        points.RemoveAt(index);
-                        points.Insert(index, new pointOnScreen(GetPosOnScreen(newPoints[i].Item1, newPoints[i].Item2, newPoints[i].Item3, true)));
+                        points[index] = new pointOnScreen(GetPosOnScreen(newPoints[i].Item1, newPoints[i].Item2, newPoints[i].Item3, true));
                     }
                 }
                 else if (xLessThanZeroCount == 1)
