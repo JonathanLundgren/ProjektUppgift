@@ -580,12 +580,22 @@ namespace ProjektUppgift
                 }
                 else if (xLessThanZeroCount == 3)
                 {
-                    int previousPoint = RotateInList(points.IndexOf(postiveXPoints[0]) - 1, points.Count);
-                    int nextPoint = RotateInList(points.IndexOf(postiveXPoints[0]) + 1, points.Count);
-                    (float, float, float) newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[previousPoint]);
-                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
-                    newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[nextPoint]);
-                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
+                    //int previousPoint = RotateInList(points.IndexOf(postiveXPoints[0]) - 1, points.Count);
+                    //int nextPoint = RotateInList(points.IndexOf(postiveXPoints[0]) + 1, points.Count);
+                    //(float, float, float) newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[previousPoint]);
+                    //points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
+                    //newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[nextPoint]);
+                    //points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
+
+                    int index = points.IndexOf(postiveXPoints[0]);
+                    int previousPoint = RotateInList(index - 1, points.Count);
+                    int nextPoint = RotateInList(index + 1, points.Count);
+
+                    (float, float, float) newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[nextPoint]);
+
+                    points[nextPoint] = new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true));
+                    newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[previousPoint]);
+                    points[previousPoint] = new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true));
                 }
                 else if (xLessThanZeroCount == 2)
                 {
@@ -617,10 +627,10 @@ namespace ProjektUppgift
                 }
                 else if (xLessThanZeroCount == 1)
                 {
-                    pointOnScreen previousPoint = points[RotateInList(points.IndexOf(negativeXPoints[0]) - 1, points.Count)];
-                    pointOnScreen nextPoint = points[RotateInList(points.IndexOf(negativeXPoints[0]) + 1, points.Count)];
-                    (float, float, float) newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], nextPoint);
                     int index = points.IndexOf(negativeXPoints[0]);
+                    pointOnScreen previousPoint = points[RotateInList(index - 1, points.Count)];
+                    pointOnScreen nextPoint = points[RotateInList(index + 1, points.Count)];
+                    (float, float, float) newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], nextPoint);
                     points.Insert(index, new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
                     newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], previousPoint);
                     points.Insert(index, new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
