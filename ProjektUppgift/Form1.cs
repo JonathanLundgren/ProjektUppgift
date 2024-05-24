@@ -594,7 +594,7 @@ namespace ProjektUppgift
                     {
                         pointOnScreen point = negativeXPoints[i];
                         pointOnScreen connectingPoint;
-                        if (points[RotateInList(points.IndexOf(point) - 1, points.Count)].x >= 0)
+                        if (points[RotateInList(points.IndexOf(point) - 1, points.Count)].relativeCamPosX >= 0)
                         {
                             connectingPoint = points[RotateInList(points.IndexOf(point) - 1, points.Count)];
                         }
@@ -617,13 +617,13 @@ namespace ProjektUppgift
                 }
                 else if (xLessThanZeroCount == 1)
                 {
-                    int previousPoint = RotateInList(points.IndexOf(negativeXPoints[0]) - 1, points.Count);
-                    int nextPoint = RotateInList(points.IndexOf(negativeXPoints[0]) + 1, points.Count);
-                    (float, float, float) newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], points[previousPoint]);
-
-                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
-                    newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], points[nextPoint]);
-                    points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
+                    pointOnScreen previousPoint = points[RotateInList(points.IndexOf(negativeXPoints[0]) - 1, points.Count)];
+                    pointOnScreen nextPoint = points[RotateInList(points.IndexOf(negativeXPoints[0]) + 1, points.Count)];
+                    (float, float, float) newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], nextPoint);
+                    int index = points.IndexOf(negativeXPoints[0]);
+                    points.Insert(index, new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
+                    newPoint = CalculateZeroXBetweenPoints(negativeXPoints[0], previousPoint);
+                    points.Insert(index, new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
                 }
                 foreach (pointOnScreen point in negativeXPoints)
                 {
@@ -710,8 +710,8 @@ namespace ProjektUppgift
                     //float newZ = (float)(halfNewZ * Math.Cos(-angle) +  halfNewX * Math.Sin(-angle));
                     float halfNewX = (float)(relativeX * Math.Cos(-angle) - relativeZ * Math.Sin(-angle));
                     newZ = (float)(relativeX * Math.Sin(-angle) + relativeZ * Math.Cos(-angle));
-                    newX = (float)(halfNewX * Math.Cos(-angleVertical) - relativeY * Math.Sin(-angleVertical));
-                    newY = (float)(halfNewX * Math.Sin(-angleVertical) + relativeY * Math.Cos(-angleVertical));
+                    newX = (float)(halfNewX * Math.Cos(angleVertical) - relativeY * Math.Sin(angleVertical));
+                    newY = (float)(halfNewX * Math.Sin(angleVertical) + relativeY * Math.Cos(angleVertical));
                 }
 
                 //if (newX > 0)
@@ -1170,7 +1170,7 @@ namespace ProjektUppgift
         private void FixCursor()
         {
             Cursor.Clip = new Rectangle(Bounds.X + 30, Bounds.Y + 50, Bounds.Width - 60, Bounds.Height - 80);
-            //controlCursor = true;
+            controlCursor = true;
             if (!isCursorHidden)
             {
                 Cursor.Hide();
