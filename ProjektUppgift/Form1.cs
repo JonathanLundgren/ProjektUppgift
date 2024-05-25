@@ -524,7 +524,7 @@ namespace ProjektUppgift
             Line[] toreturn = new Line[newHeight];
             for (int i = 0; i < newHeight; i++)
             {
-                toreturn[i] = new Line();
+                toreturn[i] = new Line(new List<FaceOnLine>());
             }
             foreach (Face face in room)
             {
@@ -678,11 +678,12 @@ namespace ProjektUppgift
                         (leftBound, rightBound) = (rightBound, leftBound);
                     }
                     float distance = ((face.x1 - playerPositionX) * (face.x1 - playerPositionX) + (face.y1 - playerPositionY) * (face.y1 - playerPositionY) + (face.z1 - playerPositionZ) * (face.z1 - playerPositionZ) + (face.x2 - playerPositionX) * (face.x2 - playerPositionX) + (face.y2 - playerPositionY) * (face.y2 - playerPositionY) + (face.z2 - playerPositionZ) * (face.z2 - playerPositionZ)) / 2;
-                    if (toreturn[i] == null)
+                    if (rightBound == rightBound)
                     {
-                        toreturn[i] = new Line();
+                        toreturn[i].faces.Add(new FaceOnLine(leftBound, rightBound, face, distance));
                     }
-                    toreturn[i].faces.Add(new FaceOnLine(leftBound, rightBound, face, distance));
+
+                    distance.Validate();
                 }
             }
             return toreturn;
@@ -1653,8 +1654,13 @@ namespace ProjektUppgift
         }
     }
 
-    public class Line
+    public struct Line
     {
-        public List<FaceOnLine> faces = new List<FaceOnLine>();
+        public List<FaceOnLine> faces;
+
+        public Line(List<FaceOnLine> faces)
+        {
+            this.faces = faces;
+        }
     }
 }
