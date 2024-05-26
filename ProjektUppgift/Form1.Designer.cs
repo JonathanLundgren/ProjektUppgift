@@ -31,7 +31,11 @@
             this.components = new System.ComponentModel.Container();
             this.gameTimer = new System.Windows.Forms.Timer(this.components);
             this.gameScreen = new System.Windows.Forms.PictureBox();
+            this.HUD = new System.Windows.Forms.PictureBox();
+            this.hpLabel = new System.Windows.Forms.Label();
+            this.powerupLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.gameScreen)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.HUD)).BeginInit();
             this.SuspendLayout();
             // 
             // gameTimer
@@ -41,6 +45,7 @@
             // 
             // gameScreen
             // 
+            this.gameScreen.BackColor = System.Drawing.SystemColors.Highlight;
             this.gameScreen.ErrorImage = null;
             this.gameScreen.InitialImage = null;
             this.gameScreen.Location = new System.Drawing.Point(0, 0);
@@ -51,12 +56,50 @@
             this.gameScreen.TabStop = false;
             this.gameScreen.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseMove);
             // 
+            // HUD
+            // 
+            this.HUD.BackColor = System.Drawing.Color.Gray;
+            this.HUD.ErrorImage = null;
+            this.HUD.InitialImage = null;
+            this.HUD.Location = new System.Drawing.Point(0, 798);
+            this.HUD.Name = "HUD";
+            this.HUD.Size = new System.Drawing.Size(1200, 202);
+            this.HUD.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.HUD.TabIndex = 1;
+            this.HUD.TabStop = false;
+            // 
+            // hpLabel
+            // 
+            this.hpLabel.AutoSize = true;
+            this.hpLabel.BackColor = System.Drawing.Color.Red;
+            this.hpLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 64.2F);
+            this.hpLabel.Location = new System.Drawing.Point(58, 850);
+            this.hpLabel.Name = "hpLabel";
+            this.hpLabel.Size = new System.Drawing.Size(256, 97);
+            this.hpLabel.TabIndex = 2;
+            this.hpLabel.Text = "HP: 5";
+            // 
+            // powerupLabel
+            // 
+            this.powerupLabel.AutoSize = true;
+            this.powerupLabel.BackColor = System.Drawing.Color.Aqua;
+            this.powerupLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 64.2F);
+            this.powerupLabel.Location = new System.Drawing.Point(411, 850);
+            this.powerupLabel.Name = "powerupLabel";
+            this.powerupLabel.Size = new System.Drawing.Size(727, 97);
+            this.powerupLabel.TabIndex = 3;
+            this.powerupLabel.Text = "Powerup: Inactive";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1443, 761);
+            this.BackColor = System.Drawing.SystemColors.Control;
+            this.ClientSize = new System.Drawing.Size(1200, 1000);
             this.ControlBox = false;
+            this.Controls.Add(this.powerupLabel);
+            this.Controls.Add(this.hpLabel);
+            this.Controls.Add(this.HUD);
             this.Controls.Add(this.gameScreen);
             this.KeyPreview = true;
             this.Name = "Form1";
@@ -66,7 +109,9 @@
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyUp);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseMove);
             ((System.ComponentModel.ISupportInitialize)(this.gameScreen)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.HUD)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -74,6 +119,9 @@
 
         private System.Windows.Forms.Timer gameTimer;
         private System.Windows.Forms.PictureBox gameScreen;
+        private System.Windows.Forms.PictureBox HUD;
+        private System.Windows.Forms.Label hpLabel;
+        private System.Windows.Forms.Label powerupLabel;
     }
 }
 
