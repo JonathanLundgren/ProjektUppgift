@@ -124,6 +124,7 @@
     <None Include="Resources\Crosshair64.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\Yellow.png" />
     <None Include="Resources\Green.png" />
     <None Include="Resources\Heal.png" />
     <None Include="Resources\Lock.png" />

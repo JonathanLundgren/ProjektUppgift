@@ -88,7 +88,7 @@ namespace ProjektUppgift
             new Level
             (
                 "Level 1",
-                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 1, 1, 0, 1, 1 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 12, 0, 11, 0, 13 } },
+                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 31, 32, 0, 33, 34 }, { 1, 1, 0, 1, 1 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 12, 0, 11, 0, 13 } },
                 new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } },
                 null,
                 null,
@@ -138,10 +138,14 @@ namespace ProjektUppgift
         public float hitBox = 0.15f;
         float shotCooldown = 1;
         float remainingShotCoolDown = 0;
+        float powerupActive;
+        public bool isEnemiesInRoom = false;
         Stopwatch stopwatch = new Stopwatch();
         public long timeElapsed;
         bool isGameActive = false;
         bool controlCursor = false;
+        int roomIndex;
+        Level currentLevel;
         List<ButtonData> buttons = new List<ButtonData>();
         public Picture colorPatternWall1 = new Picture(Properties.Resources.Wall_1);
         public Picture colorPatternRoof1 = new Picture(Properties.Resources.Roof1);
@@ -153,7 +157,12 @@ namespace ProjektUppgift
         public Picture colorPatternEnemySide1 = new Picture(Properties.Resources.EnemySide1);
         public Picture colorPatternEnemySide2 = new Picture(Properties.Resources.EnemySide2);
         public Picture colorPatternEnemySide3 = new Picture(Properties.Resources.EnemySide3);
-        public Picture colorPatternEffect1 = new Picture(Properties.Resources.Red);
+        public Picture colorPatternGoal = new Picture(Properties.Resources.Goal);
+        public Picture colorPatternLocked = new Picture(Properties.Resources.Lock);
+        public Picture colorPatternYellow = new Picture (Properties.Resources.Yellow);
+        public Picture colorPatternGreen = new Picture(Properties.Resources.Green);
+        public Picture colorPatternHeal = new Picture (Properties.Resources.Heal);
+
 
         public SoundPlayer shotSound = new SoundPlayer("ShotSound.wav");
 
@@ -227,6 +236,8 @@ namespace ProjektUppgift
 
         public void StartLevel(Level level)
         {
+            roomIndex = 1;
+            currentLevel = level;
             stopwatch.Restart();
             ResetPlayer();
             FixCursor();
@@ -236,17 +247,81 @@ namespace ProjektUppgift
             gameTimer.Start();
             StartRoom(level.room1);
             currentRoomCode = level.room1;
+            isEnemiesInRoom = CheckForEnemies();
+        }
+
+        public void StartNextRoom()
+        {
+            switch (roomIndex)
+            {
+                case 1:
+                    StartRoom(currentLevel.room2);
+                    break;
+                case 2:
+                    StartRoom(currentLevel.room3);
+                    break;
+                case 3:
+                    StartRoom(currentLevel.room4);
+                    break;
+                case 4:
+                    StartRoom(currentLevel.room5);
+                    break;
+            }
         }
 
         private void ResetPlayer()
         {
             hp = startHP;
+            powerupActive = 0;
         }
 
-        public void TakeDamage()
+        public void TakeDamage(int amount)
         {
-            hp -= 1;
-            hpLabel.Text = "HP: " + hp;
+            if (powerupActive == 0 || amount <= 0)
+            {
+                hp -= amount;
+                hpLabel.Text = "HP: " + hp;
+            }
+        }
+
+        public void ActivatePowerup()
+        {
+            powerupActive = 20f;
+            powerupLabel.Text = "Powerup: Active";
+            powerupLabel.BackColor = Color.Yellow;
+        }
+
+        public void DeactivatePowerup()
+        {
+            powerupActive = 0f;
+            powerupLabel.Text = "Powerup: Inactive";
+            powerupLabel.BackColor = Color.Aqua;
+        }
+
+        public bool CheckForEnemies()
+        {
+            byte foundEnemies = 0;
+            {
+                foreach (Object o in objects)
+                {
+                    if (o.isEnemy)
+                    {
+                        foundEnemies++;
+                        if (foundEnemies == 2)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (foundEnemies == 2)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         private void Shoot()
@@ -264,7 +339,14 @@ namespace ProjektUppgift
                         Object hitObject = lineHit.Item2.parent;
                         if (lineHit.Item2.parent.isEnemy)
                         {
-                            hitObject.TakeDamage();
+                            if (powerupActive == 0)
+                            {
+                                hitObject.TakeDamage(1);
+                            }
+                            else
+                            {
+                                hitObject.TakeDamage(3);
+                            }
                         }
                     }
                 }
@@ -274,7 +356,11 @@ namespace ProjektUppgift
 
         public void StartRoom(int[,] roomCode)
         {
+            playerPositionX = 0.5f;
+            playerPositionY = 0.5f;
+            playerPositionZ = 0.5f;
             currentRoom = GenerateRoom(roomCode);
+            currentRoomCode = roomCode;
             objects = GenerateObjects(roomCode);
         }
 
@@ -400,6 +486,15 @@ namespace ProjektUppgift
                 objects.Remove(obj);
             }
             remainingShotCoolDown -= (float)timeElapsed / 1000;
+
+            if (powerupActive >= 0)
+            {
+                powerupActive -= (float)timeElapsed / 1000;
+            }
+            else
+            {
+                DeactivatePowerup();
+            }
         }
 
         public void MoveObjects()
@@ -424,10 +519,10 @@ namespace ProjektUppgift
                 float newXPos = playerPositionX + movementX * playerSpeed * timeElapsed / 1000;
                 float newZPos = playerPositionZ + movementZ * playerSpeed * timeElapsed / 1000;
 
-                int playerGridPosX = 0 * (int)Math.Floor(playerPositionX);
-                int playerGridPosZ = 0 * (int)Math.Floor(playerPositionZ);
-                int newGridPosX = 0 * (int)Math.Floor(newXPos + wallHitboxSize * Math.Sign(movementX));
-                int newGridPosZ = 0 * (int)Math.Floor(newZPos + wallHitboxSize * Math.Sign(movementZ));
+                int playerGridPosX = (int)Math.Floor(playerPositionX);
+                int playerGridPosZ = (int)Math.Floor(playerPositionZ);
+                int newGridPosX = (int)Math.Floor(newXPos + wallHitboxSize * Math.Sign(movementX));
+                int newGridPosZ = (int)Math.Floor(newZPos + wallHitboxSize * Math.Sign(movementZ));
 
                 if ((!(newGridPosX >= currentRoomCode.GetLength(0))) && (!(newGridPosX < 0)))
                 {
@@ -474,7 +569,6 @@ namespace ProjektUppgift
         //Genererar en bild utifrån alla pixlar som används, och sätter den sedan som den bild som syns.
         public void UpdateImage()
         {
-
             Bitmap bmp = new Bitmap(newWidth, newHeight);
             
             Line[] simplifiedRoom = SimplifyRoom(GetPartRoom(currentRoom, true));
@@ -1524,6 +1618,12 @@ namespace ProjektUppgift
         public int hp;
         public bool isEnemy = false;
         public bool isProjectile = false;
+        public bool isPickUp = false;
+        public bool isHeal = false;
+        public bool isPowerup = false;
+        public bool isNextLevel = false;
+        public bool isGoal = false;
+        public Picture pickUpPattern;
         public Form1 main;
 
         public Object(int type, float positionX, float positionZ, float angle, Form1 main, float positionY = 0.4f)
@@ -1558,6 +1658,27 @@ namespace ProjektUppgift
                     difficulty = 3;
                     isProjectile = true;
                     break;
+                case 31:
+                    isPickUp = true;
+                    isHeal = true;
+                    pickUpPattern = main.colorPatternHeal;
+                    break;
+                case 32:
+                    isPickUp = true;
+                    isPowerup = true;
+                    pickUpPattern = main.colorPatternYellow;
+                    break;
+                case 33:
+                    isPickUp = true;
+                    isNextLevel = true;
+                    pickUpPattern = main.colorPatternGreen;
+                    break;
+                case 34:
+                    isPickUp = true;
+                    isGoal = true;
+                    pickUpPattern = main.colorPatternGoal;
+                    break;
+
 
             }
             if (isEnemy)
@@ -1575,13 +1696,13 @@ namespace ProjektUppgift
                         hp = 3; 
                         break;
                     case 3:
-                        turningSpeed = 5;
+                        turningSpeed = 5f;
                         maxCooldown = 0.67f;
                         hp = 5;
                         break;
                 }
             }
-            if (isProjectile)
+            else if (isProjectile)
             {
                 switch (difficulty)
                 {
@@ -1595,6 +1716,10 @@ namespace ProjektUppgift
                         movementSpeed = 1f;
                         break;
                 }
+            }
+            else if (isPickUp)
+            {
+                turningSpeed = 1f;
             }
 
             this.main = main;
@@ -1624,14 +1749,32 @@ namespace ProjektUppgift
             }
         }
 
-        public void TakeDamage()
+        public void TakeDamage(int amount)
         {
-            hp -= 1;
+            hp -= amount;
             isHurt = 0.3f;
             if (hp <= 0)
             {
                 main.objectsToRemove.Add(this);
+                main.isEnemiesInRoom = main.CheckForEnemies();
             }
+        }
+
+        public void PickUpEffect()
+        {
+            if (isHeal)
+            {
+                main.TakeDamage(-3);
+            }
+            else if (isPowerup)
+            {
+                main.ActivatePowerup();
+            }
+            else if (isNextLevel)
+            {
+                main.StartNextRoom();
+            }
+            main.objectsToRemove.Add(this);
         }
 
         public void Move()
@@ -1690,12 +1833,27 @@ namespace ProjektUppgift
                 positionZ += (float)Math.Sin(angle) * movementSpeed * main.timeElapsed / 1000;
                 if ((main.playerPositionX - positionX) * (main.playerPositionX - positionX) + (main.playerPositionY - positionY) * (main.playerPositionY - positionY) + (main.playerPositionZ - positionZ) * (main.playerPositionZ - positionZ) < main.hitBox * main.hitBox)
                 {
-                    main.TakeDamage();
+                    main.TakeDamage(1);
                     main.objectsToRemove.Add(this);
                 }
                 if (positionX < 0 || positionZ < 0 || positionX > main.currentRoomCode.GetLength(0) || positionZ > main.currentRoomCode.GetLength(1))
                 {
                     main.objectsToRemove.Add(this);
+                }
+            }
+            else if (isPickUp)
+            {
+                angle += turningSpeed * main.timeElapsed / 1000;
+                if ((main.playerPositionX - positionX) * (main.playerPositionX - positionX) + (main.playerPositionY - positionY) * (main.playerPositionY - positionY) + (main.playerPositionZ - positionZ) * (main.playerPositionZ - positionZ) < main.hitBox * main.hitBox)
+                {
+                    if ((isGoal || isNextLevel) && main.isEnemiesInRoom)
+                    {
+
+                    }
+                    else
+                    {
+                        PickUpEffect();
+                    }
                 }
             }
 
@@ -1719,6 +1877,14 @@ namespace ProjektUppgift
             else if (isProjectile)
             {
                 return GenerateCuboid(positionX, positionY, positionZ, 0.1f, 0.1f, angle, new Picture[] { main.colorPatternProjectile1, main.colorPatternProjectile1, main.colorPatternProjectile1, main.colorPatternProjectile1, main.colorPatternProjectile1, main.colorPatternProjectile1 });
+            }
+            else if (isPickUp)
+            {
+                if ((isGoal || isNextLevel) && main.isEnemiesInRoom)
+                {
+                    return GenerateCuboid(positionX, positionY, positionZ, 0.3f, 0.3f, angle, new Picture[] { main.colorPatternLocked, main.colorPatternLocked, main.colorPatternLocked, main.colorPatternLocked, main.colorPatternLocked, main.colorPatternLocked });
+                }
+                return GenerateCuboid(positionX, positionY, positionZ, 0.3f, 0.3f, angle, new Picture[] { pickUpPattern, pickUpPattern, pickUpPattern, pickUpPattern, pickUpPattern, pickUpPattern });
             }
             
             return null;
