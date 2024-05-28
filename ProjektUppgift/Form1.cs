@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NAudio.Wave;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,6 +12,7 @@ using System.Media;
 using System.Runtime.Remoting.Messaging;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
@@ -88,8 +90,8 @@ namespace ProjektUppgift
             new Level
             (
                 "Level 1",
-                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 31, 32, 0, 33, 34 }, { 1, 1, 0, 1, 1 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 12, 0, 11, 0, 13 } },
-                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } },
+                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 1, 1, 1 }, { 0, 0, 0, 0, 33 } },
+                new int[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 34, 31, 32 } },
                 null,
                 null,
                 null
@@ -97,9 +99,18 @@ namespace ProjektUppgift
             new Level
             (
                 "Level 2",
-                new int[,] { { 11, 0, 11 }, { 0, 0, 0 }, { 11, 0, 11 } },
-                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 } },
+                new int[,] { { 0, 0, 0, 1, 0, 33 }, { 0, 0, 0, 1, 0, 0 }, { 0, 1, 1, 1, 0, 0 }, { 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 11, 0 }, { 0, 0, 0, 0, 0, 0 } },
+                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 12, 0, 0 }, { 0, 0, 12, 0, 0 }, { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0 }, { 32, 1, 1, 1, 33 } },
+                new int[,] { { 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0}, { 0, 0, 13, 0, 0}, { 0, 0, 0, 0, 0}, { 34, 0, 0, 0, 0} },
                 null,
+                null
+            ),
+            new Level
+            (
+                "Level 3",
+                new int[,] { { 0, 1, 1, 1, 1, 1 }, { 0, 0, 0, 0, 0, 12 }, { 1, 1, 1, 1, 1, 0 }, { 13, 0, 0, 0, 0, 0 }, { 33, 0, 0, 0, 0, 0 } },
+                new int[,] { { 0, 0, 0, 0, 0 }, { 1, 1, 0, 1, 1 }, { 13, 0, 0, 0, 13 }, { 1, 0, 0, 0, 1 }, { 13, 0, 0, 0, 13 }, { 0, 0, 0, 0, 0 }, { 33, 0, 32, 0, 31 } },
+                new int[,] { { 0, 1, 12, 0, 11, 11, 34, 12 }, {31, 1, 0, 0, 0, 0, 0, 0}, {0, 1, 11, 0, 13, 0, 0, 11}, {31, 1, 11, 0, 0, 13, 0, 11}, {0, 1, 0, 0, 0, 0, 0, 0}, {31, 1, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 12} },
                 null,
                 null
             )
@@ -165,10 +176,21 @@ namespace ProjektUppgift
 
 
         public SoundPlayer shotSound = new SoundPlayer("ShotSound.wav");
+        public SoundPlayer playerHitSound = new SoundPlayer("Player_Hit.wav");
+        public SoundPlayer enemyHitSound = new SoundPlayer("Enemy_Hit.wav");
+        public SoundPlayer enemyKilledSound = new SoundPlayer("Enemy_Killed.wav");
+        public SoundPlayer pickupSound = new SoundPlayer("Pickup.wav");
+        public SoundPlayer powerupDepletedSound = new SoundPlayer("Powerup_Depleted.wav");
+        public SoundPlayer music = new SoundPlayer("Combat_Music.wav");
+        public AudioFileReader audioFileReader = new AudioFileReader("Combat_Music.wav");
+        public WaveOutEvent outPutDevice = new WaveOutEvent();
+
 
         public Form1()
         {
-
+            audioFileReader.Volume = 0.2f;
+            outPutDevice.Init(audioFileReader);
+            outPutDevice.PlaybackStopped += StartMusic;
             InitializeComponent();
             currentRoomCode = testRoomCode;
             gameScreen.Size = new Size(width, height);
@@ -195,6 +217,11 @@ namespace ProjektUppgift
             playerPositionZ = 0.5f;
 
             Crosshair.Parent = gameScreen;
+        }
+
+        private void StartMusic(object sender, StoppedEventArgs e)
+        {
+            outPutDevice.Play();
         }
 
         public void CreateStartButtons()
@@ -236,6 +263,7 @@ namespace ProjektUppgift
 
         public void StartLevel(Level level)
         {
+
             roomIndex = 1;
             currentLevel = level;
             stopwatch.Restart();
@@ -247,7 +275,9 @@ namespace ProjektUppgift
             gameTimer.Start();
             StartRoom(level.room1);
             currentRoomCode = level.room1;
-            isEnemiesInRoom = CheckForEnemies();
+            TakeDamage(0);
+            outPutDevice.Volume = 1;
+            StartMusic(null, null);
         }
 
         public void StartNextRoom()
@@ -267,20 +297,39 @@ namespace ProjektUppgift
                     StartRoom(currentLevel.room5);
                     break;
             }
+            roomIndex++;
+        }
+
+        public void LevelClear(string message)
+        {
+            isGameActive = false;
+            outPutDevice.Pause();
+            gameScreen.Hide();
+            CreateStartButtons();
+            MessageBox.Show(message);
         }
 
         private void ResetPlayer()
         {
             hp = startHP;
-            powerupActive = 0;
+            DeactivatePowerup();
+            isADown = 0;
+            isDDown = 0;
+            isWDown = 0;
+            isSDown = 0;
         }
 
         public void TakeDamage(int amount)
         {
-            if (powerupActive == 0 || amount <= 0)
+            if (powerupActive <= 0 || amount <= 0)
             {
                 hp -= amount;
                 hpLabel.Text = "HP: " + hp;
+                playerHitSound.Play();
+                if (hp <= 0)
+                {
+                    LevelClear("Game Over");
+                }
             }
         }
 
@@ -293,12 +342,13 @@ namespace ProjektUppgift
 
         public void DeactivatePowerup()
         {
+            powerupDepletedSound.Play();
             powerupActive = 0f;
             powerupLabel.Text = "Powerup: Inactive";
             powerupLabel.BackColor = Color.Aqua;
         }
 
-        public bool CheckForEnemies()
+        public bool CheckForEnemies(int discount)
         {
             byte foundEnemies = 0;
             {
@@ -307,14 +357,14 @@ namespace ProjektUppgift
                     if (o.isEnemy)
                     {
                         foundEnemies++;
-                        if (foundEnemies == 2)
+                        if (foundEnemies == 1 + discount)
                         {
                             break;
                         }
                     }
                 }
             }
-            if (foundEnemies == 2)
+            if (foundEnemies == 1 + discount)
             {
                 return true;
             }
@@ -339,7 +389,7 @@ namespace ProjektUppgift
                         Object hitObject = lineHit.Item2.parent;
                         if (lineHit.Item2.parent.isEnemy)
                         {
-                            if (powerupActive == 0)
+                            if (powerupActive <= 0)
                             {
                                 hitObject.TakeDamage(1);
                             }
@@ -362,6 +412,8 @@ namespace ProjektUppgift
             currentRoom = GenerateRoom(roomCode);
             currentRoomCode = roomCode;
             objects = GenerateObjects(roomCode);
+            isEnemiesInRoom = CheckForEnemies(0);
+            DeactivatePowerup();
         }
 
         public List<Object> GenerateObjects(int[,] roomCode)
@@ -474,26 +526,29 @@ namespace ProjektUppgift
         //En timer används för att generera nästa frame.
         private void gameTimer_Tick(object sender, EventArgs e)
         {
-            timeElapsed = stopwatch.ElapsedMilliseconds;
-            stopwatch.Restart();
-            UpdateImage();
-            MovePlayer();
-            MoveObjects();
-            objects.AddRange(objectsToAdd);
-            objectsToAdd.Clear();
-            foreach (Object obj in objectsToRemove)
+            if (isGameActive)
             {
-                objects.Remove(obj);
-            }
-            remainingShotCoolDown -= (float)timeElapsed / 1000;
+                timeElapsed = stopwatch.ElapsedMilliseconds;
+                stopwatch.Restart();
+                UpdateImage();
+                MovePlayer();
+                MoveObjects();
+                objects.AddRange(objectsToAdd);
+                objectsToAdd.Clear();
+                foreach (Object obj in objectsToRemove)
+                {
+                    objects.Remove(obj);
+                }
+                remainingShotCoolDown -= (float)timeElapsed / 1000;
 
-            if (powerupActive >= 0)
-            {
-                powerupActive -= (float)timeElapsed / 1000;
-            }
-            else
-            {
-                DeactivatePowerup();
+                if (powerupActive > 0)
+                {
+                    powerupActive -= (float)timeElapsed / 1000;
+                    if (powerupActive < 0)
+                    {
+                        DeactivatePowerup();
+                    }
+                }
             }
         }
 
@@ -1751,17 +1806,20 @@ namespace ProjektUppgift
 
         public void TakeDamage(int amount)
         {
+            main.enemyHitSound.Play();
             hp -= amount;
             isHurt = 0.3f;
             if (hp <= 0)
             {
+                main.enemyKilledSound.Play();
                 main.objectsToRemove.Add(this);
-                main.isEnemiesInRoom = main.CheckForEnemies();
+                main.isEnemiesInRoom = main.CheckForEnemies(1);
             }
         }
 
         public void PickUpEffect()
         {
+            main.pickupSound.Play();
             if (isHeal)
             {
                 main.TakeDamage(-3);
@@ -1773,6 +1831,10 @@ namespace ProjektUppgift
             else if (isNextLevel)
             {
                 main.StartNextRoom();
+            }
+            else if (isGoal)
+            {
+                main.LevelClear("Level clear");
             }
             main.objectsToRemove.Add(this);
         }

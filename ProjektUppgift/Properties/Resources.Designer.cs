@@ -183,6 +183,16 @@ namespace ProjektUppgift.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap Green1 {
+            get {
+                object obj = ResourceManager.GetObject("Green1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap Heal {
             get {
                 object obj = ResourceManager.GetObject("Heal", resourceCulture);
@@ -256,6 +266,16 @@ namespace ProjektUppgift.Properties {
         internal static System.Drawing.Bitmap Yellow {
             get {
                 object obj = ResourceManager.GetObject("Yellow", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Yellow1 {
+            get {
+                object obj = ResourceManager.GetObject("Yellow1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
