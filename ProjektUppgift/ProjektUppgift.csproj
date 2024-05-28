@@ -96,5 +96,26 @@
   <ItemGroup>
     <None Include="Resources\Roof1.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Projectile1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EnemyFront1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EnemyFront2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EnemyFront3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EnemySide1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EnemySide2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EnemySide3.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

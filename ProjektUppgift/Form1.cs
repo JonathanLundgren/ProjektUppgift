@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Security.Cryptography.X509Certificates;
@@ -119,24 +121,35 @@ namespace ProjektUppgift
         float lineSize = 0.1f;
         //Alla ytor som finns i det genererade rummet.
         public List<Face> currentRoom = new List<Face>();
-        List<Object> objects = new List<Object>();
+        public List<Object> objects = new List<Object>();
+        public List<Object> objectsToAdd = new List<Object>();
+        public List<Object> objectsToRemove = new List<Object>();
         int isWDown = 0;
         int isSDown = 0;
         int isADown = 0;
         int isDDown = 0;
-        float playerSpeed = 0.2f;
+        float playerSpeed = 2f;
         float verticalVelocity = 0;
         float jumpForce = 0.5f;
         float gravity = 0.1f;
         int startHP = 5;
         public int hp;
-        public float hitBox = 0.3f;
+        public float hitBox = 0.15f;
+        Stopwatch stopwatch = new Stopwatch();
+        public long timeElapsed;
         bool isGameActive = false;
         bool controlCursor = false;
         List<ButtonData> buttons = new List<ButtonData>();
         public Picture colorPatternWall1 = new Picture(Properties.Resources.Wall_1);
         public Picture colorPatternRoof1 = new Picture(Properties.Resources.Roof1);
         public Picture colorPatternFloor1 = new Picture(Properties.Resources.Floor1);
+        public Picture colorPatternProjectile1 = new Picture(Properties.Resources.Projectile1);
+        public Picture colorPatternEnemyFace1 = new Picture(Properties.Resources.EnemyFront1);
+        public Picture colorPatternEnemyFace2 = new Picture(Properties.Resources.EnemyFront2);
+        public Picture colorPatternEnemyFace3 = new Picture(Properties.Resources.EnemyFront3);
+        public Picture colorPatternEnemySide1 = new Picture(Properties.Resources.EnemySide1);
+        public Picture colorPatternEnemySide2 = new Picture(Properties.Resources.EnemySide2);
+        public Picture colorPatternEnemySide3 = new Picture(Properties.Resources.EnemySide3);
 
         public Form1()
         {
@@ -206,6 +219,8 @@ namespace ProjektUppgift
 
         public void StartLevel(Level level)
         {
+            stopwatch.Restart();
+            ResetPlayer();
             FixCursor();
             RemoveButtons();
             gameScreen.Show();
@@ -218,6 +233,12 @@ namespace ProjektUppgift
         private void ResetPlayer()
         {
             hp = startHP;
+        }
+
+        public void TakeDamage()
+        {
+            hp -= 1;
+            hpLabel.Text = "HP: " + hp;
         }
 
         public void StartRoom(int[,] roomCode)
@@ -336,9 +357,17 @@ namespace ProjektUppgift
         //En timer används för att generera nästa frame.
         private void gameTimer_Tick(object sender, EventArgs e)
         {
+            timeElapsed = stopwatch.ElapsedMilliseconds;
+            stopwatch.Restart();
             UpdateImage();
             MovePlayer();
             MoveObjects();
+            objects.AddRange(objectsToAdd);
+            objectsToAdd.Clear();
+            foreach (Object obj in objectsToRemove)
+            {
+                objects.Remove(obj);
+            }
         }
 
         public void MoveObjects()
@@ -360,8 +389,8 @@ namespace ProjektUppgift
                 float movementX = (float)Math.Cos(movementDirection);
                 float movementZ = (float)Math.Sin(movementDirection);
 
-                float newXPos = playerPositionX + movementX * playerSpeed;
-                float newZPos = playerPositionZ + movementZ * playerSpeed;
+                float newXPos = playerPositionX + movementX * playerSpeed * timeElapsed / 1000;
+                float newZPos = playerPositionZ + movementZ * playerSpeed * timeElapsed / 1000;
 
                 int playerGridPosX = (int)Math.Floor(playerPositionX);
                 int playerGridPosZ = (int)Math.Floor(playerPositionZ);
@@ -1263,6 +1292,7 @@ namespace ProjektUppgift
         }
     }
 
+
     //Varje pixel förvarar data om åt vilket håll de ska "titta" mot.
     public class Pixel
     {
@@ -1421,37 +1451,54 @@ namespace ProjektUppgift
     public class Object
     {
         public float positionX;
-        public float positionY = 0.5f;
+        public float positionY = 0.4f;
         public float positionZ;
         public float angle;
+        public float additionalShownAngle = 0;
         public float turningSpeed;
         public float movementSpeed;
         public int difficulty;
-        public bool isEnemy;
-        public bool isProjectile;
-        public bool isImmobile;
+        public float maxCooldown;
+        public float coolDownRemaining = 0;
+        public bool isEnemy = false;
+        public bool isProjectile = false;
+        public bool isEffect = false;
         public Form1 main;
 
         public Object(int type, float positionX, float positionZ, float angle, Form1 main)
         {
-            this.positionX = positionX + 0.5f;
-            this.positionZ = positionZ + 0.5f;
+            this.positionX = positionX;
+            this.positionZ = positionZ;
             this.angle = angle;
             switch (type)
             {
                 case 11:
                     difficulty = 1;
                     isEnemy = true;
-                    isImmobile = true;
                     break;
+                case 21:
+                    difficulty = 1;
+                    isProjectile = true;
+                    break;
+
             }
-            if (isEnemy || isProjectile)
+            if (isEnemy)
             {
                 switch (difficulty)
                 {
                     case 1:
-                        turningSpeed = 0.05f;
+                        turningSpeed = 1.5f;
                         movementSpeed = 0.3f;
+                        maxCooldown = 2f;
+                        break;
+                }
+            }
+            if (isProjectile)
+            {
+                switch (difficulty)
+                {
+                    case 1:
+                        movementSpeed = 0.5f;
                         break;
                 }
             }
@@ -1459,45 +1506,69 @@ namespace ProjektUppgift
             this.main = main;
         }
 
+        public void Shoot()
+        {
+            coolDownRemaining -= (float)main.timeElapsed / 1000;
+            if (coolDownRemaining <= 0)
+            {
+                switch(difficulty)
+                {
+                    case 1:
+                        main.objectsToAdd.Add(new Object(21, positionX, positionZ, angle, main));
+                        break;
+                }
+                coolDownRemaining = maxCooldown;
+            }
+        }
+
         public void Move()
         {
             if (isEnemy)
             {
+                Shoot();
                 float angleToPlayer = main.fixAngle((float)Math.Atan2(main.playerPositionZ - positionZ, main.playerPositionX - positionX));
                 if (main.CalculateLine(main.playerPositionX - positionX, 0, main.playerPositionZ - positionZ, positionX, Form1.roomHeight / 2, positionZ, main.currentRoom, angleToPlayer).Item3 >= (main.playerPositionX - positionX) * (main.playerPositionX - positionX) + (main.playerPositionZ - positionZ) * (main.playerPositionZ - positionZ))
                 {
                     float angleDistance = Math.Abs(angleToPlayer - angle);
-                    if (angleToPlayer < angle)
+                    if (angleDistance < turningSpeed * main.timeElapsed / 1000 || Math.PI * 2 - angleToPlayer + angle < turningSpeed * main.timeElapsed / 1000)
                     {
-                        if (angleDistance < Math.PI)
-                        {
-                            angle -= turningSpeed;
-                        }
-                        else
-                        {
-                            angle += turningSpeed;
-                        }
+                        angle = angleToPlayer;
                     }
                     else
                     {
-                        if (angleDistance < Math.PI)
+                        if (angleToPlayer < angle)
                         {
-                            angle += turningSpeed;
+                            if (angleDistance < Math.PI)
+                            {
+                                angle -= turningSpeed * main.timeElapsed / 1000;
+                            }
+                            else
+                            {
+                                angle += turningSpeed * main.timeElapsed / 1000;
+                            }
                         }
                         else
                         {
-                            angle -= turningSpeed;
+                            if (angleDistance < Math.PI)
+                            {
+                                angle += turningSpeed * main.timeElapsed / 1000;
+                            }
+                            else
+                            {
+                                angle -= turningSpeed * main.timeElapsed / 1000;
+                            }
                         }
                     }
                 }
             }
             else if (isProjectile)
             {
-                positionX += (float)Math.Cos(angle) * movementSpeed;
-                positionZ += (float)Math.Sin(angle) * movementSpeed;
+                positionX += (float)Math.Cos(angle) * movementSpeed * main.timeElapsed / 1000;
+                positionZ += (float)Math.Sin(angle) * movementSpeed * main.timeElapsed / 1000;
                 if ((main.playerPositionX - positionX) * (main.playerPositionX - positionX) + (main.playerPositionY - positionY) * (main.playerPositionY - positionY) + (main.playerPositionZ - positionZ) * (main.playerPositionZ - positionZ) < main.hitBox * main.hitBox)
                 {
-                    main.hp -= 1;
+                    main.TakeDamage();
+                    main.objectsToRemove.Add(this);
                 }
             }
 
@@ -1511,8 +1582,12 @@ namespace ProjektUppgift
                 switch (difficulty)
                 {
                     case 1:
-                        return GenerateCuboid(positionX, positionY, positionZ, 0.2f, 0.5f, angle, new Picture[] { main.colorPatternFloor1, main.colorPatternRoof1, main.colorPatternWall1, main.colorPatternRoof1, main.colorPatternWall1, main.colorPatternWall1 });
+                        return GenerateCuboid(positionX, positionY, positionZ, 0.3f, 0.3f, angle, new Picture[] { main.colorPatternEnemyFace1, main.colorPatternEnemySide1, main.colorPatternEnemySide1, main.colorPatternEnemySide1, main.colorPatternEnemySide1, main.colorPatternEnemySide1 });
                 }
+            }
+            if (isProjectile)
+            {
+                return GenerateCuboid(positionX, positionY, positionZ, 0.1f, 0.1f, angle, new Picture[] { main.colorPatternProjectile1, main.colorPatternProjectile1, main.colorPatternProjectile1, main.colorPatternProjectile1, main.colorPatternProjectile1, main.colorPatternProjectile1 });
             }
             return null;
         }
