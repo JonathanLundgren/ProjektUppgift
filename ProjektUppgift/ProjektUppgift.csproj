@@ -117,5 +117,15 @@
   <ItemGroup>
     <None Include="Resources\EnemySide3.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Crosshair.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Crosshair64.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Red.png" />
+    <Content Include="Resources\ShotSound.wav" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
