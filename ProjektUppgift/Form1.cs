@@ -51,7 +51,7 @@ Log :
 05/16 Fortsatte med optimiseringar.
 05/24 Fortsatte med optimiseringar.
 05/28 Lade till HUD, 3 olika fiender, 4 olika pickups, sytem för att skada fiender och ta skada, projektiler till fiender och system för att växla mellan nivåer.
-05/29 Kommenterade en del av koden.
+05/29 Kommenterade och fixade till koden. Fick ljud att följa med över github.
 
 */
 namespace ProjektUppgift
