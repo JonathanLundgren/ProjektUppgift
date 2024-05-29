@@ -62,29 +62,32 @@ Log :
 05/15 Jobbade med optimiseringar.
 05/16 Fortsatte med optimiseringar.
 05/24 Fortsatte med optimiseringar.
+05/28 Lade till HUD, 3 olika fiender, 4 olika pickups, sytem för att skada fiender och ta skada, projektiler till fiender och system för att växla mellan nivåer.
 
 */
 namespace ProjektUppgift
 {
     public partial class Form1 : Form
     {
-        //Storleken på formsen
+        //Storleken på bilden som visar spelet.
         const int width = 1200;
         const int height = 800;
         //Hur hög upplösning det är. Mindre värde ger högre upplösning.
         const int resolution = 4;
+        //Värden som används för att beräkna spelarens vy
         float imageSize = 0.25f;
         float imageScale = 8;
-        //Höjd och bredd som används för beräkningar.
+        //Höjd och bredd med den valda upplösningen.
         readonly int newWidth = width / resolution;
         readonly int newHeight = height / resolution;
         //En två-dimensionell array med alla pixlar som kan ändras på.
         Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
+        //Funktioner för hörnen i spelarens vy, som fortsätter fungera när spelaren tittar längre framåt. På formen y = kx + m eller z = kx + m.
         (float, float) yxRatioUp;
         (float, float) yxRatioDown;
         (float, float) zxRatioLeft;
         (float, float) zxRatioRight;
-        //"RoomCodes" är arrayer som beskriver hur rummen ska se ut. Beräkningar utförs senare för att generera rummen på ett sätt som fungerar med resten av koden.
+        //Kod för att beskriva olika banor. Rum som fungerar med resten av koden genereras sedan utifrån de här.
         public Level[] levels = new Level[]
         {
             new Level
@@ -115,7 +118,7 @@ namespace ProjektUppgift
                 null
             )
         };
-        int[,] testRoomCode = new int[,] { { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 0, 1 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 0, 0, 0 }, { 0, 1, 0, 1, 0 }, { 0, 0, 2, 0, 0 } };
+        //Beskrivningen för det rum som är aktivt just nu.
         public int[,] currentRoomCode;
         //Vilken riktning spelaren tittar mot.
         public float angle = 0;
@@ -124,40 +127,57 @@ namespace ProjektUppgift
         public float playerPositionX = 0;
         public float playerPositionY = 0;
         public float playerPositionZ = 0;
+        //Hur nära väggar man kan gå. Lägre värde betyder att man kan gå närmare.
         float wallHitboxSize = 0.2f;
         //Hur högt upp taket är.
         public const float roomHeight = 1;
-        Color roomColor = Color.DarkGreen;
-        Color roomColorPattern = Color.DarkGray;
-        Color roofColor = Color.DarkBlue;
-        float lineSize = 0.1f;
-        //Alla ytor som finns i det genererade rummet.
+        //Alla ytor som finns i det genererade rummet. Spelarens vy kan beräknas med de här.
         public List<Face> currentRoom = new List<Face>();
+        //Alla objekt som finns i rummet, till exempel fiender, projektiler eller pickups.
         public List<Object> objects = new List<Object>();
+        //Används för att kunna lägga till eller ta bort objekt samtidigt som den övre listan körs igenom med en foreach.
         public List<Object> objectsToAdd = new List<Object>();
         public List<Object> objectsToRemove = new List<Object>();
+        //Input från de angivna tangenterna.
         int isWDown = 0;
         int isSDown = 0;
         int isADown = 0;
         int isDDown = 0;
+        //Spelarens hastighet, angiven i enheter per sekund. (Jag vet inte hur stor en enhet är relativt till verkliga mått, men den minsta möjliga väggen är en enhet lång.)
         float playerSpeed = 2f;
+        //Värden som används för att hoppa med spelaren. (Hopp fungerar för det mesta, men taket beter sig konstigt.)
         float verticalVelocity = 0;
         float jumpForce = 0.5f;
         float gravity = 0.1f;
+        //Hur mycket liv spelaren har i början av varje bana.
         int startHP = 5;
+        //Hur mycket liv spelaren har just nu.
         public int hp;
+        //Hur stor spelarens hitbox är.
         public float hitBox = 0.15f;
+        //Hur många sekunder som måste gå efter spelaren har skjutit tills den kan skjuta igen.
         float shotCooldown = 1;
+        //Hur många sekunder som är kvar på väntetiden.
         float remainingShotCoolDown = 0;
+        //Om en powerup är aktiv, och i hur många sekunder till den är det.
         float powerupActive;
+        //Om det finns några fiender kvar i rummet.
         public bool isEnemiesInRoom = false;
+        //En stopwatch som används för att mäta tiden mellan varje "frame" och därmed kunna använda mått angivna i x / sekund eller liknande.
         Stopwatch stopwatch = new Stopwatch();
+        //Hur många millisekunder som har gått sedan förra "framen".
         public long timeElapsed;
+        //Om spelet är igång just nu, det vill säga om spelaren inte är i någon meny.
         bool isGameActive = false;
+        //Om spelet har kontrollen över musen.
         bool controlCursor = false;
+        //Vilket rum i banan som är aktivt just nu.
         int roomIndex;
+        //Vilken bana som är aktivt just nu.
         Level currentLevel;
+        //Lista för att hålla koll på genererade knappar.
         List<ButtonData> buttons = new List<ButtonData>();
+        //Konverterar bilder till ett sätt som fungerar med resten av koden.
         public Picture colorPatternWall1 = new Picture(Properties.Resources.Wall_1);
         public Picture colorPatternRoof1 = new Picture(Properties.Resources.Roof1);
         public Picture colorPatternFloor1 = new Picture(Properties.Resources.Floor1);
@@ -174,26 +194,30 @@ namespace ProjektUppgift
         public Picture colorPatternGreen = new Picture(Properties.Resources.Green);
         public Picture colorPatternHeal = new Picture (Properties.Resources.Heal);
 
-
+        //Olika ljudeffekter
         public SoundPlayer shotSound = new SoundPlayer("ShotSound.wav");
         public SoundPlayer playerHitSound = new SoundPlayer("Player_Hit.wav");
         public SoundPlayer enemyHitSound = new SoundPlayer("Enemy_Hit.wav");
         public SoundPlayer enemyKilledSound = new SoundPlayer("Enemy_Killed.wav");
         public SoundPlayer pickupSound = new SoundPlayer("Pickup.wav");
         public SoundPlayer powerupDepletedSound = new SoundPlayer("Powerup_Depleted.wav");
-        public SoundPlayer music = new SoundPlayer("Combat_Music.wav");
+        //Musik
         public AudioFileReader audioFileReader = new AudioFileReader("Combat_Music.wav");
         public WaveOutEvent outPutDevice = new WaveOutEvent();
 
 
         public Form1()
         {
+            //Volymen på musiken, blir alldeles för högljudd annars.
             audioFileReader.Volume = 0.2f;
+            //Initierar musikspelaren.
             outPutDevice.Init(audioFileReader);
+            //Försökte göra så att musiken loopar, men verkar inte fungera.
             outPutDevice.PlaybackStopped += StartMusic;
             InitializeComponent();
-            currentRoomCode = testRoomCode;
+            //Storleken på bilden som spelet visas på.
             gameScreen.Size = new Size(width, height);
+            //Storleken på client-delen på formsen, det vill säga den del där man kan lägga saker.
             ClientSize = new Size(width - 2, height + 200);
             //Genererar alla pixlar som behövs.
             for (int i = 0; i < newWidth; i++)
@@ -203,7 +227,7 @@ namespace ProjektUppgift
                     pixels[i, j] = new Pixel(imageSize * (i - (newWidth / 2)) / newWidth, -imageSize * (j - (newHeight / 2)) / newHeight);
                 }
             }
-            //StartRoom(testRoomCode);
+            //För att beräkna tidigare nämnda hörn-funktioner.
             CalculateRatio(pixels[0, newHeight - 1].xPos, pixels[0, newHeight - 1].yPos, 0, 0, out float xDirectionLeftUp, out float yDirectionLeftUp, out float zDirectionLeftUp, out _, out float yPositionleftUp, out float zPositionLeftUp);
             CalculateRatio(pixels[newWidth - 1, 0].xPos, pixels[newWidth - 1, 0].yPos, 0, 0, out float xDirectionRightDown, out float yDirectionRightDown, out float zDirectionRightDown, out _, out float yPositionRightDown, out float zPositionRightDown);
             yxRatioUp = (yDirectionLeftUp / xDirectionLeftUp, yPositionleftUp);
@@ -216,6 +240,7 @@ namespace ProjektUppgift
             playerPositionY = 0.5f;
             playerPositionZ = 0.5f;
 
+            //Så att crosshair:et syns över spelet.
             Crosshair.Parent = gameScreen;
         }
 
@@ -224,6 +249,7 @@ namespace ProjektUppgift
             outPutDevice.Play();
         }
 
+        //Ser till att inget annat stör och skapar knappen för att starta spelet.
         public void CreateStartButtons()
         {
             ReleaseCursor();
@@ -237,6 +263,7 @@ namespace ProjektUppgift
             buttons.Add(tempButton);
         }
 
+        //Skapar knappar för olika nivåer.
         public void CreateLevelButtons()
         {
             RemoveButtons();
@@ -252,6 +279,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Tar bort alla knappar.
         public void RemoveButtons()
         {
             foreach (ButtonData button in buttons)
@@ -261,6 +289,7 @@ namespace ProjektUppgift
             buttons.Clear();
         }
 
+        //Startar en bana.
         public void StartLevel(Level level)
         {
 
@@ -276,10 +305,10 @@ namespace ProjektUppgift
             StartRoom(level.room1);
             currentRoomCode = level.room1;
             TakeDamage(0);
-            outPutDevice.Volume = 1;
             StartMusic(null, null);
         }
 
+        //Startar nästa rum i en bana.
         public void StartNextRoom()
         {
             switch (roomIndex)
@@ -300,6 +329,7 @@ namespace ProjektUppgift
             roomIndex++;
         }
 
+        //Metod som kallas när spelaren dör eller klarar en bana, används för att komma tillbaka till huvudmenyn.
         public void LevelClear(string message)
         {
             isGameActive = false;
@@ -309,6 +339,7 @@ namespace ProjektUppgift
             MessageBox.Show(message);
         }
 
+        //Sätter spelarens värden till det de ska vara i början av en bana.
         private void ResetPlayer()
         {
             hp = startHP;
@@ -319,6 +350,7 @@ namespace ProjektUppgift
             isSDown = 0;
         }
 
+        //Kallas när spelaren tar skada eller får tillbaka liv. Uppdaterar texten som visar liv och spelar ett ljud, samt kollar om spelaren har slut liv.
         public void TakeDamage(int amount)
         {
             if (powerupActive <= 0 || amount <= 0)
@@ -333,6 +365,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Metoder för att aktivera eller deaktivera powerups.
         public void ActivatePowerup()
         {
             powerupActive = 20f;
@@ -348,6 +381,7 @@ namespace ProjektUppgift
             powerupLabel.BackColor = Color.Aqua;
         }
 
+        //Kollar om det finns några fiender kvar i rummet. discount är 0 i början, men 1 när en döende fiende kallar den här, eftersom en döende fiende fortfarande räknas med i beräkningen.
         public bool CheckForEnemies(int discount)
         {
             byte foundEnemies = 0;
@@ -374,14 +408,17 @@ namespace ProjektUppgift
             }
         }
 
+        //Kollar om spelaren kan skjuta, och gör det isåfall.
         private void Shoot()
         {
-
             if (remainingShotCoolDown <= 0)
             {
                 shotSound.Play();
+                //Beräknar åt vilket håll skottet far.
                 CalculateRatio(0, 0, angle, angleVertical, out float xDirection, out float yDirection, out float zDirection, out float xPosition, out float yPosition, out float zPosition);
+                //Beräknar var skottet träffar.
                 var lineHit = CalculateLine(xDirection, yDirection, zDirection, xPosition, yPosition, zPosition, GetPartRoom(currentRoom, false), angle);
+                //Kollar om skottet träffade en fiende, och skadar den isåfall.
                 if (lineHit.Item2 != null)
                 {
                     if (lineHit.Item2.parent != null)
@@ -404,6 +441,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Kod som körs varje gång ett rum laddas in.
         public void StartRoom(int[,] roomCode)
         {
             playerPositionX = 0.5f;
@@ -416,6 +454,7 @@ namespace ProjektUppgift
             DeactivatePowerup();
         }
 
+        //Generarar alla start-objekt i ett rum utifrån rummets beskrivning.
         public List<Object> GenerateObjects(int[,] roomCode)
         {
             List<Object> objectsToReturn = new List<Object>();
@@ -433,7 +472,7 @@ namespace ProjektUppgift
             return objectsToReturn;
         }
 
-        //Metod som genererar rum utifrån en "RoomCode".
+        //Metod som genererar alla väggar i ett rum utifrån rummets beskrivning.
         private List<Face> GenerateRoom(int[,] roomCode)
         {
             List<Face> room = new List<Face>();
@@ -496,6 +535,8 @@ namespace ProjektUppgift
                     }
                 }
             }
+
+            //Sätter ihop väggar där det går göra, för att få lite bättre prestanda.
             int k = 0;
             while (k < room.Count)
             {
@@ -523,24 +564,31 @@ namespace ProjektUppgift
             return room;
         }
 
-        //En timer används för att generera nästa frame.
+        //Allt som ska göras varje "frame".
         private void gameTimer_Tick(object sender, EventArgs e)
         {
             if (isGameActive)
             {
+                //Kollar hur många millisekunder som har gått sen senaste frame:en
                 timeElapsed = stopwatch.ElapsedMilliseconds;
                 stopwatch.Restart();
+                //Uppdaterar spelarens vy.
                 UpdateImage();
+                //Rör spelaren baserat på input.
                 MovePlayer();
+                //Rör alla objekt beroende på typ.
                 MoveObjects();
+
+                //Lägger till och tar bort objekt som finns i respektive lista.
                 objects.AddRange(objectsToAdd);
                 objectsToAdd.Clear();
                 foreach (Object obj in objectsToRemove)
                 {
                     objects.Remove(obj);
                 }
-                remainingShotCoolDown -= (float)timeElapsed / 1000;
 
+                //Sänker tiden som är kvar tills spelaren kan skjuta igen, samt tiden som är kvar på powerup:en om den är aktiv.
+                remainingShotCoolDown -= (float)timeElapsed / 1000;
                 if (powerupActive > 0)
                 {
                     powerupActive -= (float)timeElapsed / 1000;
@@ -560,6 +608,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Flyttar spelaren beroende på input, riktning och hur lång tid som har gått sen senaste frame:en.
         public void MovePlayer()
         {
             float horizontal = isADown - isDDown;
@@ -574,6 +623,7 @@ namespace ProjektUppgift
                 float newXPos = playerPositionX + movementX * playerSpeed * timeElapsed / 1000;
                 float newZPos = playerPositionZ + movementZ * playerSpeed * timeElapsed / 1000;
 
+                //Använder rummets beskrivning för att kolla om spelaren är på väg att krocka med en vägg
                 int playerGridPosX = (int)Math.Floor(playerPositionX);
                 int playerGridPosZ = (int)Math.Floor(playerPositionZ);
                 int newGridPosX = (int)Math.Floor(newXPos + wallHitboxSize * Math.Sign(movementX));
@@ -595,6 +645,7 @@ namespace ProjektUppgift
                 }
             }
 
+            //Används för att hoppa med spelaren, fungerar dåligt men jag har låtit det vara kvar.
             playerPositionY += verticalVelocity;
             verticalVelocity -= gravity;
             if (playerPositionY <= 0.5)
@@ -604,6 +655,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Returnerar ett rum som innehåller alla väggar, plus vissa objekt som kan väljas med getEverything.
         private List<Face> GetPartRoom(List<Face> room, bool getEverything)
         {
             List<Face> partRoom = new List<Face>();
@@ -626,8 +678,8 @@ namespace ProjektUppgift
         {
             Bitmap bmp = new Bitmap(newWidth, newHeight);
             
+            //Rummet simplifieras genom att det delas upp i rader, där varje pixel enkelt kan kolla vilka sidor som är värda att kolla om den träffar, istället för att kolla alla sidor.
             Line[] simplifiedRoom = SimplifyRoom(GetPartRoom(currentRoom, true));
-            //Color[] previouslayer = null;
             for (int i = 0; i < newWidth; i++)
             {
                 for (int j = 0; j < newHeight; j++)
@@ -641,88 +693,21 @@ namespace ProjektUppgift
                         }
                     }
 
-                    //För testning
-                    //Color color;
-                    //if (faces.Count > 0)
-                    //{
-                    //    color = Color.Red;
-                    //    if (CalculatePixel(pixels[i, j], faces).Item2 != null)
-                    //    {
-                    //        color = Color.Purple;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    color = CalculatePixel(pixels[i, j], faces).Item1;
-                    //}
-                    //bmp.SetPixel(i, j, color);
-
-                    //Vanlig kod som inte används under testning
                     Color color = CalculatePixel(pixels[i, j], faces).Item1;
                     bmp.SetPixel(i, j, color);
                 }
-                //Color[] colors = new Color[newHeight];
-                //for (int j = 0; j < newHeight; j ++)
-                //{
-                //    Color color = CalculatePixel(pixels[i, j], simplifiedRoom).Item1;
-                //    colors[j] = color;
-                //    if (j >= 2)
-                //    {
-                //        if (colors[j - 2] == color)
-                //        {
-                //            colors[j - 1] = color;
-                //        }
-                //        else
-                //        {
-                //            colors[j - 1] = CalculatePixel(pixels[i, j - 1], simplifiedRoom).Item1;
-                //        }
-                //    }
-                //    //bmp.SetPixel(i, j, color);
-                //}
-                //for (int j = 0; j < newHeight; j++)
-                //{
-                //    bmp.SetPixel(i, j, colors[j]);
-                //}
-                //if (previouslayer != null)
-                //{
-                //    for (int j = 0; j < newHeight; j += 2)
-                //    {
-                //        if (previouslayer[j] == colors[j])
-                //        {
-                //            bmp.SetPixel(i - 1, j, colors[j]);
-                //        }
-                //        else
-                //        {
-                //            Color color = CalculatePixel(pixels[i - 1, j], simplifiedRoom).Item1;
-                //            bmp.SetPixel(i - 1, j, color);
-                //        }
-                //        if (j >= 2)
-                //        {
-                //            if (previouslayer[j - 2] == colors[j])
-                //            {
-                //                bmp.SetPixel(i - 1, j - 1, colors[j]);
-                //            }
-                //            else
-                //            {
-                //                Color color = CalculatePixel(pixels[i - 1, j - 1], simplifiedRoom).Item1;
-                //                bmp.SetPixel(i - 1, j - 1, color);
-                //            }
-                //        }
-                //    }
-                //}
-                //previouslayer = colors;
             }
-            //pictureBox1.Image = bmp;
             gameScreen.Image = bmp;
         }
 
-        //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas.
+        //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas. Returnerar färg, vilken sida som träffades, avstånd och position.
         public (Color, Face, float, (float, float, float)) CalculatePixel(Pixel pixel, List<Face> room)
         {
             CalculateRatio(pixel.xPos, pixel.yPos, angle, angleVertical, out float xDirection, out float yDirection, out float zDirection, out float xPosition, out float yPosition, out float zPosition);
             return CalculateLine(xDirection, yDirection, zDirection, xPosition, yPosition, zPosition, room, angle);
         }
 
+        //Används för att få ett objekt i en lista, där man vill loopa igenom listan om index är för högt eller lågt.
         public int RotateInList (int newIndex, int length)
         {
             while (newIndex < 0) 
@@ -736,20 +721,9 @@ namespace ProjektUppgift
             return newIndex;
         }
 
+        //Delar upp ett rum i en massa linjer, som gör det enklare för pixlar att kolla vilken sida de träffar.
         public Line[] SimplifyRoom(List<Face> room)
         {
-            //List<Face> result = new List<Face>();
-            //for (int i = 0; i < newWidth; i += 3)
-            //{
-            //    Face face = CalculatePixel(pixels[i, newHeight / 2], room).Item2;
-            //    if ((!result.Contains(face)) && face != null)
-            //    {
-            //        result.Add(face);
-            //    }
-            //}
-            //return result;
-            //y = kx + m
-            //m = y - kx
             Line[] toreturn = new Line[newHeight];
             for (int i = 0; i < newHeight; i++)
             {
@@ -782,6 +756,7 @@ namespace ProjektUppgift
                     new pointOnScreen(GetPosOnScreen(corner4.Item1, corner4.Item2, corner4.Item3, false))
                 };
 
+                //Om en eller flera punkter hamnar bakanför spelaren måste de hanteras på ett speciellt sätt.
                 int xLessThanZeroCount = 0;
                 List<pointOnScreen> postiveXPoints = new List<pointOnScreen>();
                 List<pointOnScreen> negativeXPoints = new List<pointOnScreen>();
@@ -803,13 +778,6 @@ namespace ProjektUppgift
                 }
                 else if (xLessThanZeroCount == 3)
                 {
-                    //int previousPoint = RotateInList(points.IndexOf(postiveXPoints[0]) - 1, points.Count);
-                    //int nextPoint = RotateInList(points.IndexOf(postiveXPoints[0]) + 1, points.Count);
-                    //(float, float, float) newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[previousPoint]);
-                    //points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
-                    //newPoint = CalculateZeroXBetweenPoints(postiveXPoints[0], points[nextPoint]);
-                    //points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3, true)));
-
                     int index = points.IndexOf(postiveXPoints[0]);
                     int previousPoint = RotateInList(index - 1, points.Count);
                     int nextPoint = RotateInList(index + 1, points.Count);
@@ -836,10 +804,6 @@ namespace ProjektUppgift
                             connectingPoint = points[RotateInList(points.IndexOf(point) + 1, points.Count)];
                         }
                         newPoints[i] = CalculateZeroXBetweenPoints(point, connectingPoint);
-                        //points.Add(new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
-                        //int index = points.IndexOf(point);
-                        //points.RemoveAt(index);
-                        //points.Insert(index, new pointOnScreen(GetPosOnScreen(newPoint.Item1, newPoint.Item2, newPoint.Item3)));
                     }
                     for (int i = 0; i < 2; i++)
                     {
@@ -909,11 +873,9 @@ namespace ProjektUppgift
                         {
                             (leftBound, rightBound) = (rightBound, leftBound);
                         }
-                        //float distance = ((face.x1 - playerPositionX) * (face.x1 - playerPositionX) + (face.y1 - playerPositionY) * (face.y1 - playerPositionY) + (face.z1 - playerPositionZ) * (face.z1 - playerPositionZ) + (face.x2 - playerPositionX) * (face.x2 - playerPositionX) + (face.y2 - playerPositionY) * (face.y2 - playerPositionY) + (face.z2 - playerPositionZ) * (face.z2 - playerPositionZ)) / 2;
-                        float distance = 0;
                         if (rightBound == rightBound)
                         {
-                            toreturn[i].faces.Add(new FaceOnLine(leftBound, rightBound, face, distance));
+                            toreturn[i].faces.Add(new FaceOnLine(leftBound, rightBound, face));
                         }
                     }
                 }
@@ -937,29 +899,12 @@ namespace ProjektUppgift
                     float relativeX = x - playerPositionX;
                     float relativeY = -y + playerPositionY;
                     float relativeZ = z - playerPositionZ;
-                    //float newY = (float)(relativeY * Math.Cos(-angleVertical) + Math.Sqrt(relativeX * relativeX + relativeZ * relativeZ) * Math.Sin(-angleVertical));
-                    //float halfNewZ = (float)Math.Sqrt((relativeX * relativeX + relativeY * relativeY + relativeZ * relativeZ - newY * newY) / (1 + (relativeX * relativeX) / (relativeZ * relativeZ)));
-                    //halfNewZ = Math.Abs(halfNewZ) * Math.Sign(relativeZ);
-                    //float halfNewX = halfNewZ * relativeX / relativeZ;
-                    //float newX = (float)(halfNewX * Math.Cos(-angle) - halfNewZ * Math.Sin(-angle));
-                    //float newZ = (float)(halfNewZ * Math.Cos(-angle) +  halfNewX * Math.Sin(-angle));
                     float halfNewX = (float)(relativeX * Math.Cos(-angle) - relativeZ * Math.Sin(-angle));
                     newZ = (float)(relativeX * Math.Sin(-angle) + relativeZ * Math.Cos(-angle));
                     newX = (float)(halfNewX * Math.Cos(angleVertical) - relativeY * Math.Sin(angleVertical));
                     newY = (float)(halfNewX * Math.Sin(angleVertical) + relativeY * Math.Cos(angleVertical));
                 }
 
-                //if (newX > 0)
-                //{
-                //    newZ = (float)(newZ / (imageScale * newX));
-                //    newY = (float)(newY / (imageScale * newX));
-                //}
-                //else if (newX < 0)
-                //{
-                //    newZ = (float)(newZ * (imageScale * -newX));
-                //    newY = (float)(newY * (imageScale * -newX));
-                //}
-                //newX = 0;
                 float leftBound = zxRatioLeft.Item1 * newX + zxRatioLeft.Item2;
                 float rightBound = zxRatioRight.Item1 * newX + zxRatioRight.Item2;
 
@@ -1088,10 +1033,8 @@ namespace ProjektUppgift
                 }
                 else if (Math.Abs(xDirection) <= 0.00001d)
                 {
-                    //MessageBox.Show("BBBBBBBBBBBB");
                     if (face.zxRatio <= 0.01d && face.zxRatio >= -0.01d)
                     {
-                        //MessageBox.Show("AAAAAAAAAAAAAA");
                         hitX = xPosition;
                         if (hitX <= face.UpperX && hitX >= face.lowerX)
                         {
@@ -1131,7 +1074,6 @@ namespace ProjektUppgift
                         hitZ = (face.lowerX - (xPosition - (xDirection / zDirection * zPosition))) / ((xDirection / zDirection));
                         if (hitZ <= face.UpperZ && hitZ >= face.lowerZ)
                         {
-                            //hitX = (hitZ * (xDirection / zDirection) + xPosition) - ((xDirection / zDirection) * zPosition);
                             hitX = face.x1;
                             if (hitX <= face.UpperX + 0.01d && hitX >= face.lowerX - 0.01d)
                             {
@@ -1154,56 +1096,6 @@ namespace ProjektUppgift
                         }
                     }
                 }
-                //a + bx = c + dx
-                //bx = c + dx - a
-                //(b - d)x = c - a
-                //x = (c - a) / (b - d)
-                //if (face.isDirectionX)
-                //{
-                //    float hitZ = (face.x1 - xPosition) * zDirection / xDirection + zPosition;
-                //    float direction = Math.Atan2(hitZ - playerPositionZ, face.x1 - playerPositionX);
-                //    if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
-                //    {
-                //        if (face.z1 <= hitZ && hitZ <= face.z2)
-                //        {
-                //            float hitY = (face.x1 - xPosition) * yDirection / xDirection + yPosition;
-                //            if (0 <= hitY && hitY <= roomHeight)
-                //            {
-                //                if (Math.Pow(face.x1 - xPosition, 2) + Math.Pow(hitZ - zPosition, 2) < proximity)
-                //                {
-                //                    currentClosest = face;
-                //                    color = face.color;
-                //                    proximity = Math.Pow(face.x1 - xPosition, 2) + Math.Pow(hitZ - zPosition, 2);
-                //                    relativeHitFromLower = hitZ - face.z1;
-                //                    relativeHitY = hitY;
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
-                //else
-                //{
-                //    float hitX = (face.z1 - zPosition) * xDirection / zDirection + xPosition;
-                //    float direction = Math.Atan2(face.z1 - playerPositionZ, hitX - playerPositionX);
-                //    if (Math.Abs(direction - angle) < Math.PI / 2 || Math.Abs(direction + Math.PI * 2 - angle) < Math.PI / 2)
-                //    {
-                //        if (face.x1 <= hitX && hitX <= face.x3)
-                //        {
-                //            float hitY = (face.z1 - zPosition) * yDirection / zDirection + yPosition;
-                //            if (0 <= hitY && hitY <= roomHeight)
-                //            {
-                //                if (Math.Pow(hitX - xPosition, 2) + Math.Pow(face.z1 - zPosition, 2) < proximity)
-                //                {
-                //                    currentClosest = face;
-                //                    color = face.color;
-                //                    proximity = Math.Pow(hitX - xPosition, 2) + Math.Pow(face.z1 - zPosition, 2);
-                //                    relativeHitFromLower = hitX - face.x1;
-                //                    relativeHitY = hitY;
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
             }
             //Kod som gör olika mönster.
             if (currentClosest != null)
@@ -1235,29 +1127,6 @@ namespace ProjektUppgift
                     }
                 }
                 return (color, currentClosest, proximity, (hitX, hitY, hitZ));
-                //if (currentClosest.isDirectionX)
-                //{
-                //if (Math.Abs(relativeHitFromLower - currentClosest.z1) < lineSize || Math.Abs(currentClosest.z2 - relativeHitFromLower) < lineSize)
-                //{
-                //return (roomColorPattern, currentClosest);
-                //}
-                //}
-                //if (Math.Abs(patternX) < lineSize || Math.Abs(1 - patternX) < lineSize)
-                //{
-                //    return (roomColorPattern, currentClosest);
-                //}
-                //if (Math.Abs(patternY) < lineSize || Math.Abs(roomHeight - patternY) < lineSize)
-                //{
-                //    return (roomColorPattern, currentClosest);
-                //}
-                //else if (Math.Abs(patternY - patternX) < lineSize || Math.Abs(roomHeight - patternY - patternX) < lineSize)
-                //{
-                //    return (roomColorPattern, currentClosest);
-                //}
-                //else
-                //{
-                //    return (color, currentClosest);
-                //}
             }
             else
             {
@@ -1282,14 +1151,6 @@ namespace ProjektUppgift
                 int pixelY = (int)((pattern.pattern.GetLength(1) - 1) * patternY);
                 int colorIndex = pattern.pattern[pixelX, pixelY];
                 return (pattern.colors[colorIndex], currentClosest, float.MaxValue, (0, 0, 0));
-                //if (Math.Abs(Math.Round(hitX) - hitX) <= lineSize || Math.Abs(Math.Round(hitZ) - hitZ) <= lineSize)
-                //{
-                //    return (roomColorPattern, currentClosest);
-                //}
-                //else
-                //{
-                //    return (roofColor, currentClosest);
-                //}
             }
         }
 
@@ -1299,8 +1160,6 @@ namespace ProjektUppgift
             float baseYPosition = (float)Math.Cos(angleVertical) * localYPos;
             float baseXPosition;
             float baseZPosition;
-            //baseXPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + Math.Tan(angle) * Math.Tan(angle));
-            //baseZPosition = localYPos * Math.Sin(angleVertical) / Math.Sqrt(1 + (1 / (Math.Tan(angle) * Math.Tan(angle))));
             baseXPosition = -(float)Math.Cos(angle) * (float)Math.Sin(angleVertical) * localYPos;
             baseZPosition = -(float)Math.Sin(angle) * (float)Math.Sin(angleVertical) * localYPos;
             baseXPosition += localXPos * (float)Math.Sin(angle);
@@ -1311,18 +1170,7 @@ namespace ProjektUppgift
             float y = (float)Math.Sin(angleVertical);
             float h = (float)Math.Sqrt(1 - y * y);
             float x = (float)Math.Cos(angle) * h;
-            //if (angle < 180)
-            //{
-            //    x = -x;
-            //}
             float z = (float)Math.Sin(angle) * h;
-            //if (angle < 90)
-            //{
-            //    z = -z;
-            //}
-            //float x = 1 / ((1 + a2) * (c2 - 1));
-            //float y = c * x * x * Math.Sqrt(1 + a2);
-            //float z = a * x;
             projectedXPosition += x;
             projectedYPosition += y;
             projectedZPosition += z;
@@ -1332,31 +1180,6 @@ namespace ProjektUppgift
             xPosition = baseXPosition + playerPositionX;
             yPosition = baseYPosition + playerPositionY;
             zPosition = baseZPosition + playerPositionZ;
-            //float baseXPosition = localXPos * Math.Sin(angle);
-            //float baseZPosition = localXPos * -Math.Cos(angle);
-            //float baseYPosition = localYPos;
-            //float projectedXPosition = Math.Cos(angle) + baseXPosition * imageScale;
-            //float projectedZPosition = Math.Sin(angle) + baseZPosition * imageScale;
-            //float projectedYPosition = baseYPosition * imageScale;
-            //xDirection = projectedXPosition - baseXPosition;
-            //yDirection = projectedYPosition - baseYPosition;
-            //zDirection = projectedZPosition - baseZPosition;
-            //xPosition = baseXPosition + playerPositionX;
-            //yPosition = baseYPosition + playerPositionY;
-            //zPosition = baseZPosition + playerPositionZ;
-            //float verticalAngle = Math.Atan2(localYPos * (imageScale - 1), 1) * 180 / Math.PI;
-            //float horizontalAngle = Math.Atan2(localXPos * (imageScale - 1), 1) * 180 / Math.PI + angle;
-            //float a = Math.Tan(verticalAngle * Math.PI / 180);
-            //float c = Math.Tan(horizontalAngle * Math.PI / 180);
-            //float a2 = a * a;
-            //float c2 = c * c;
-            //float d = c2 + a2 * (c2 + 1) + 1;
-            //zDirection = Math.Sqrt(1 / d);
-            //yDirection = a * Math.Sqrt(zDirection * zDirection * (c2 + 1));
-            //xDirection = c * zDirection;
-            //xPosition = localXPos * Math.Cos(angle * Math.PI / 180) + playerPositionX;
-            //zPosition = localXPos * Math.Sin(angle * Math.PI / 180) + playerPositionZ;
-            //yPosition = localYPos + playerPositionY;
         }
 
         //Kollar vilka knappar som trycks ned och flyttar eller roterar spelaren.
@@ -1957,10 +1780,10 @@ namespace ProjektUppgift
             Face[] toReturn = new Face[6];
             for (int i = 0; i < 4; i++)
             {
-                float relativeXPosition1 = (float)(Math.Cos(angle) + (float)Math.Sin(angle)) * 0.5f * length; //1  //1  //-1
-                float relativeZPosition1 = (float)(Math.Sin(angle) - (float)Math.Cos(angle)) * 0.5f * length; //-1 //1  //1
-                float relativeXPosition2 = (float)(Math.Cos(angle) - (float)Math.Sin(angle)) * 0.5f * length; //1  //-1 //-1
-                float relativeZPosition2 = (float)(Math.Sin(angle) + (float)Math.Cos(angle)) * 0.5f * length; //1  //1  //-1
+                float relativeXPosition1 = (float)(Math.Cos(angle) + (float)Math.Sin(angle)) * 0.5f * length; 
+                float relativeZPosition1 = (float)(Math.Sin(angle) - (float)Math.Cos(angle)) * 0.5f * length; 
+                float relativeXPosition2 = (float)(Math.Cos(angle) - (float)Math.Sin(angle)) * 0.5f * length;
+                float relativeZPosition2 = (float)(Math.Sin(angle) + (float)Math.Cos(angle)) * 0.5f * length;
 
                 toReturn[i] = new Face(angle, relativeXPosition1 + xPos, yPos - 0.5f * height, relativeZPosition1 + zPos, relativeXPosition2 + xPos, yPos + 0.5f * height, relativeZPosition2 + zPos, pictures[i], this);
                 angle += (float)Math.PI / 2;
@@ -2070,14 +1893,12 @@ namespace ProjektUppgift
         public float pos1;
         public float pos2;
         public Face face;
-        public float distance;
 
-        public FaceOnLine(float pos1, float pos2, Face face, float distance)
+        public FaceOnLine(float pos1, float pos2, Face face)
         {
             this.pos1 = pos1;
             this.pos2 = pos2;
             this.face = face;
-            this.distance = distance;
         }
     }
 
