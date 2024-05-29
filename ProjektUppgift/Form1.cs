@@ -191,7 +191,7 @@ namespace ProjektUppgift
         public Picture colorPatternEnemySide3 = new Picture(Properties.Resources.EnemySide3);
         public Picture colorPatternGoal = new Picture(Properties.Resources.Goal);
         public Picture colorPatternLocked = new Picture(Properties.Resources.Lock);
-        public Picture colorPatternYellow = new Picture (Properties.Resources.Yellow);
+        public Picture colorPatternPowerup = new Picture (Properties.Resources.Powerup);
         public Picture colorPatternGreen = new Picture(Properties.Resources.Green);
         public Picture colorPatternHeal = new Picture (Properties.Resources.Heal);
 
@@ -1345,7 +1345,9 @@ namespace ProjektUppgift
     //Data om varje sida.
     public class Face
     {
+        //Vilken riktning sidan är vänd mot.
         public float direction;
+        //Hörnens positioner.
         public float x1;
         public float y1;
         public float z1;
@@ -1358,6 +1360,7 @@ namespace ProjektUppgift
         public float x4;
         public float y4;
         public float z4;
+        //Värden som används i uträkningar
         public float lowerX;
         public float lowerZ;
         public float LowerXZ;
@@ -1369,9 +1372,12 @@ namespace ProjektUppgift
         public float zxRatio;
         public float length;
         public float height;
+        //Vilken bild som visas på sidan.
         public Picture picture;
+        //Om sidan är kopplad till något objekt, det objektet.
         public Object parent;
 
+        //Funktioner för sidans kanter. Används bara om sidan är vågrät. På formen z = kx + m.
         public (float, float) higherFunction1;
         public (float, float) higherFunction2;
         public (float, float) lowerFunction1;
@@ -1455,6 +1461,7 @@ namespace ProjektUppgift
 
         }
 
+        //Sätter värden som används i beräkningar.
         public void SetValues()
         {
             if (x1 < x3)
@@ -1484,31 +1491,43 @@ namespace ProjektUppgift
         }
     }
 
+    //Data om varje objekt. (Fiender, pickups, projektiler).
     public class Object
     {
         public float positionX;
-        public float positionY = 0.4f;
+        public float positionY;
         public float positionZ;
         public float angle;
-        public float additionalShownAngle = 0;
+        //Hur snabbt objektek kan vända på sig.
         public float turningSpeed;
+        //Hur snabbt objektet kan röra på sig. (enbart för projektiler)
         public float movementSpeed;
-        public float lifeTime;
+        //Vilken svårighetsgrad objektet har. (enbart för fiender och projektiler)
         public int difficulty;
+        //Cooldowns för fiendens skott. (enbart för fiender)
         public float maxCooldown;
         public float coolDownRemaining = 0;
+        //Används för att ge en effekt när ett objekt tar skada. (funkar för allt, men används bara för fiender)
         public float isHurt = 0;
+        //Hur mycket liv objektet har (enbart för fiender)
         public int hp;
+        //Om objektet är en fiende
         public bool isEnemy = false;
+        //Om objektet är en projektil
         public bool isProjectile = false;
+        //Om objektet är en pickup
         public bool isPickUp = false;
+        //Vilken sorts pickup det är
         public bool isHeal = false;
         public bool isPowerup = false;
         public bool isNextLevel = false;
         public bool isGoal = false;
+        //Om objektet är en pickup, vilken bild som ska visas på alla sidor.
         public Picture pickUpPattern;
+        //Referens till formen, för att kunna komma åt en massa värden.
         public Form1 main;
 
+        //Sätter objektets värden från en angiven typ.
         public Object(int type, float positionX, float positionZ, float angle, Form1 main, float positionY = 0.4f)
         {
             this.positionX = positionX;
@@ -1549,7 +1568,7 @@ namespace ProjektUppgift
                 case 32:
                     isPickUp = true;
                     isPowerup = true;
-                    pickUpPattern = main.colorPatternYellow;
+                    pickUpPattern = main.colorPatternPowerup;
                     break;
                 case 33:
                     isPickUp = true;
@@ -1608,6 +1627,7 @@ namespace ProjektUppgift
             this.main = main;
         }
 
+        //Metod som fiender använder för att skjuta. Kallas varje frame.
         public void Shoot()
         {
             coolDownRemaining -= (float)main.timeElapsed / 1000;
@@ -1632,6 +1652,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Metod som kallas när en fiende tar skada.
         public void TakeDamage(int amount)
         {
             main.enemyHitSound.Play();
@@ -1645,6 +1666,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Metod som kallas när spelaren är tillräckligt nära en pickup. Ger olika effekter beroende på vilken sorts pickup det är.
         public void PickUpEffect()
         {
             main.pickupSound.Play();
@@ -1667,6 +1689,7 @@ namespace ProjektUppgift
             main.objectsToRemove.Add(this);
         }
 
+        //Metod som kallas varje frame. Roterar eller flyttar på objektet, samt kallar andra metoder som ska kallas varje frame.
         public void Move()
         {
             if (isHurt > 0)
@@ -1750,6 +1773,7 @@ namespace ProjektUppgift
             angle = main.FixAngle(angle);
         }
 
+        //Returnerar en lista med alla sidor på objektet.
         public Face[] GetFaces()
         {
             if (isEnemy)
@@ -1780,6 +1804,7 @@ namespace ProjektUppgift
             return null;
         }
 
+        //Genererar ett rätblock utifrån fiendens värden.
         public Face[] GenerateCuboid(float xPos, float yPos, float zPos, float height, float length, float angle, Picture[] pictures)
         {
             Face[] toReturn = new Face[6];
@@ -1825,6 +1850,7 @@ namespace ProjektUppgift
         }
     }
 
+    //Sparar bekrivningar för varje rum i en bana. Jag använder olika arrayer för att de måste vara lika stora om jag skulle stoppa alla i en tre-dimensionell, men det finns säkert något bättre sätt.
     public class Level
     {
         public string name;
@@ -1844,6 +1870,7 @@ namespace ProjektUppgift
         }
     }
 
+    //Sparar en bild på ett sätt som fungerar med resten av koden.
     public class Picture
     {
         public List<Color> colors = new List<Color>();
@@ -1866,6 +1893,7 @@ namespace ProjektUppgift
         }
     }
 
+    //Används för att styra genererade knappar.
     public class ButtonData
     {
         public int id;
@@ -1893,6 +1921,7 @@ namespace ProjektUppgift
         }
     }
 
+    //Används med optimiseringssystemet med linjer. Anger en sida och mellan vilka positioner på en linje den finns.
     public struct FaceOnLine
     {
         public float pos1;
@@ -1907,6 +1936,7 @@ namespace ProjektUppgift
         }
     }
 
+    //Sparar var en punkt finns på skärmen, samt var den finns relativt till kameran.
     public struct pointOnScreen
     {
         public float x;
@@ -1924,6 +1954,7 @@ namespace ProjektUppgift
         }
     }
 
+    //Sparar en rätlinje på formen x = ky + m, samt vilka gränser den linjen finns inom.
     public struct StraightLine
     {
         public float k;
@@ -1966,6 +1997,7 @@ namespace ProjektUppgift
         }
     }
 
+    //Egentligen bara en lista med FaceOnLine:s.
     public struct Line
     {
         public List<FaceOnLine> faces;

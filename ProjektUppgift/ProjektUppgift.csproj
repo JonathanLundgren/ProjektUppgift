@@ -161,6 +161,7 @@
     <None Include="Resources\Lock.png" />
     <None Include="Resources\Goal.png" />
     <None Include="Resources\Red.png" />
+    <None Include="Resources\Powerup.png" />
     <Content Include="Resources\ShotSound.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
