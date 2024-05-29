@@ -883,6 +883,7 @@ namespace ProjektUppgift
             }
             return toreturn;
 
+            //Räknar ut var på skärmen en punkt hamnar.
             (float, float, float, float, float) GetPosOnScreen(float x, float y, float z, bool alreadymodified)
             {
                 float newX;
@@ -926,7 +927,7 @@ namespace ProjektUppgift
             }
         }
 
-
+        //Räknar ut var en linje dragen från en viss punkt med en viss riktning träffar. Returnerar färg, vilken sida som träffas, avstånd från startpunkt till träff, och var träffen hamnade.
         public (Color, Face, float, (float, float, float)) CalculateLine(float xDirection, float yDirection, float zDirection, float xPosition, float yPosition, float zPosition, List<Face> faces, float angle)
         {
             Face currentClosest = null;
@@ -1098,7 +1099,7 @@ namespace ProjektUppgift
                     }
                 }
             }
-            //Kod som gör olika mönster.
+            //Kod som räknar ut var på sidan som träffades, och därmed vilken färg som ska returneras.
             if (currentClosest != null)
             {
                 if (currentClosest.height == 0)
@@ -1155,7 +1156,7 @@ namespace ProjektUppgift
             }
         }
 
-        //Metod för att räkna ut i vilken riktning linjen ska dras utifrån givna vinklar.
+        //Metod för att räkna ut riktning och startpunkt för linjen till åvanstående metod, givet en viss punkt på skärmen.
         public void CalculateRatio(float localXPos, float localYPos, float angle, float angleVertical, out float xDirection, out float yDirection, out float zDirection, out float xPosition, out float yPosition, out float zPosition)
         {
             float baseYPosition = (float)Math.Cos(angleVertical) * localYPos;
@@ -1183,7 +1184,7 @@ namespace ProjektUppgift
             zPosition = baseZPosition + playerPositionZ;
         }
 
-        //Kollar vilka knappar som trycks ned och flyttar eller roterar spelaren.
+        //Metod för att kolla input från knappar.
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.W)
@@ -1233,6 +1234,7 @@ namespace ProjektUppgift
 
         }
 
+        //Metoder för att styra över muspekaren.
         bool isCursorHidden = false;
         private void FixCursor()
         {
@@ -1255,6 +1257,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Tar in en vinkel och ger samma vinkel i spannet 0 till 2 * PI.
         public float FixAngle(float angle)
         {
             while (angle < 0)
@@ -1268,7 +1271,7 @@ namespace ProjektUppgift
             return angle;
         }
 
-        //Metod som ser till att vinkeln håller sig mellan 0 och 180.
+        //Fixar spelarens vinkel med hjälp av åvanstående metod, samt ser till att spelaren inte tittar för långt uppåt eller nedåt.
         private void FixPlayerRotation()
         {
             angle = FixAngle(angle);
@@ -1284,6 +1287,7 @@ namespace ProjektUppgift
 
         }
 
+        //Koller efter avsaknad av input från vissa knappar.
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.W)
@@ -1304,6 +1308,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Kollar hur muspekaren rör sig och roterar spelaren därefter.
         private void Form1_MouseMove(object sender, MouseEventArgs e)
         {
             if (controlCursor)
@@ -1315,6 +1320,7 @@ namespace ProjektUppgift
             }
         }
 
+        //Kollaren om spelaren trycker ned vänster musknapp.
         private void gameScreen_Click(object sender, EventArgs e)
         {
             Shoot();
@@ -1322,11 +1328,9 @@ namespace ProjektUppgift
     }
 
 
-    //Varje pixel förvarar data om åt vilket håll de ska "titta" mot.
+    //Varje pixel har en viss position på skärmen.
     public class Pixel
     {
-        public float angleHorizontal;
-        public float angleVertical;
         public float xPos;
         public float yPos;
 
@@ -1338,7 +1342,7 @@ namespace ProjektUppgift
         }
     }
 
-    //Data om varje vägg.
+    //Data om varje sida.
     public class Face
     {
         public float direction;
