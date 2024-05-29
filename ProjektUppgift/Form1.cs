@@ -198,7 +198,7 @@ namespace ProjektUppgift
         public Form1()
         {
             //Volymen på musiken, blir alldeles för högljudd annars.
-            audioFileReader.Volume = 0.2f;
+            audioFileReader.Volume = 0.1f;
             //Initierar musikspelaren.
             outPutDevice.Init(audioFileReader);
             //Försökte göra så att musiken loopar, men verkar inte fungera.
