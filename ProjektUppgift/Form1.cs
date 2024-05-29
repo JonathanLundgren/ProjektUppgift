@@ -58,6 +58,7 @@ namespace ProjektUppgift
 {
     public partial class Form1 : Form
     {
+        public const bool playSound = false;
         //Storleken på bilden som visar spelet.
         const int width = 1200;
         const int height = 800;
@@ -183,6 +184,7 @@ namespace ProjektUppgift
         public Picture colorPatternGreen = new Picture(Properties.Resources.Green);
         public Picture colorPatternHeal = new Picture (Properties.Resources.Heal);
 
+
         //Olika ljudeffekter
         public SoundPlayer shotSound = new SoundPlayer("ShotSound.wav");
         public SoundPlayer playerHitSound = new SoundPlayer("Player_Hit.wav");
@@ -191,18 +193,23 @@ namespace ProjektUppgift
         public SoundPlayer pickupSound = new SoundPlayer("Pickup.wav");
         public SoundPlayer powerupDepletedSound = new SoundPlayer("Powerup_Depleted.wav");
         //Musik
-        public AudioFileReader audioFileReader = new AudioFileReader("Combat_Music.wav");
+        public AudioFileReader audioFileReader;
         public WaveOutEvent outPutDevice = new WaveOutEvent();
 
 
         public Form1()
         {
-            //Volymen på musiken, blir alldeles för högljudd annars.
-            audioFileReader.Volume = 0.2f;
-            //Initierar musikspelaren.
-            outPutDevice.Init(audioFileReader);
-            //Försökte göra så att musiken loopar, men verkar inte fungera.
-            outPutDevice.PlaybackStopped += StartMusic;
+            if (playSound)
+            {
+                audioFileReader = new AudioFileReader("Combat_Music.wav");
+
+                //Volymen på musiken, blir alldeles för högljudd annars.
+                audioFileReader.Volume = 0.2f;
+                //Initierar musikspelaren.
+                outPutDevice.Init(audioFileReader);
+                //Försökte göra så att musiken loopar, men verkar inte fungera.
+                outPutDevice.PlaybackStopped += StartMusic;
+            }
             InitializeComponent();
             //Storleken på bilden som spelet visas på.
             gameScreen.Size = new Size(width, height);
@@ -235,7 +242,10 @@ namespace ProjektUppgift
 
         private void StartMusic(object sender, StoppedEventArgs e)
         {
-            outPutDevice.Play();
+            if (playSound)
+            {
+                outPutDevice.Play();
+            }
         }
 
         //Ser till att inget annat stör och skapar knappen för att starta spelet.
@@ -346,7 +356,10 @@ namespace ProjektUppgift
             {
                 hp -= amount;
                 hpLabel.Text = "HP: " + hp;
-                playerHitSound.Play();
+                if (playSound)
+                {
+                    playerHitSound.Play();
+                }
                 if (hp <= 0)
                 {
                     LevelClear("Game Over");
@@ -364,7 +377,10 @@ namespace ProjektUppgift
 
         public void DeactivatePowerup()
         {
-            powerupDepletedSound.Play();
+            if (playSound)
+            {
+                powerupDepletedSound.Play();
+            }
             powerupActive = 0f;
             powerupLabel.Text = "Powerup: Inactive";
             powerupLabel.BackColor = Color.Aqua;
@@ -402,7 +418,10 @@ namespace ProjektUppgift
         {
             if (remainingShotCoolDown <= 0)
             {
-                shotSound.Play();
+                if (playSound)
+                {
+                    shotSound.Play();
+                }
                 //Beräknar åt vilket håll skottet far.
                 CalculateRatio(0, 0, angle, angleVertical, out float xDirection, out float yDirection, out float zDirection, out float xPosition, out float yPosition, out float zPosition);
                 //Beräknar var skottet träffar.
@@ -1643,12 +1662,18 @@ namespace ProjektUppgift
         //Metod som kallas när en fiende tar skada.
         public void TakeDamage(int amount)
         {
-            main.enemyHitSound.Play();
+            if (Form1.playSound)
+            {
+                main.enemyHitSound.Play();
+            }
             hp -= amount;
             isHurt = 0.3f;
             if (hp <= 0)
             {
-                main.enemyKilledSound.Play();
+                if (Form1.playSound)
+                {
+                    main.enemyKilledSound.Play();
+                }
                 main.objectsToRemove.Add(this);
                 main.isEnemiesInRoom = main.CheckForEnemies(1);
             }
@@ -1657,7 +1682,10 @@ namespace ProjektUppgift
         //Metod som kallas när spelaren är tillräckligt nära en pickup. Ger olika effekter beroende på vilken sorts pickup det är.
         public void PickUpEffect()
         {
-            main.pickupSound.Play();
+            if (Form1.playSound)
+            {
+                main.pickupSound.Play();
+            }
             if (isHeal)
             {
                 main.TakeDamage(-3);
