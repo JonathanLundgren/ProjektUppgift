@@ -64,13 +64,13 @@ namespace ProjektUppgift
         //Hur hög upplösning det är. Mindre värde ger högre upplösning.
         const int resolution = 4;
         //Värden som används för att beräkna spelarens vy
-        float imageSize = 0.25f;
-        float imageScale = 8;
+        readonly float imageSize = 0.25f;
+        readonly float imageScale = 8;
         //Höjd och bredd med den valda upplösningen.
         readonly int newWidth = width / resolution;
         readonly int newHeight = height / resolution;
         //En två-dimensionell array med alla pixlar som kan ändras på.
-        Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
+        readonly Pixel[,] pixels = new Pixel[width / resolution, height / resolution];
         //Funktioner för hörnen i spelarens vy, som fortsätter fungera när spelaren tittar längre framåt. På formen y = kx + m eller z = kx + m.
         (float, float) yxRatioUp;
         (float, float) yxRatioDown;
@@ -110,20 +110,20 @@ namespace ProjektUppgift
         //Beskrivningen för det rum som är aktivt just nu.
         public int[,] currentRoomCode;
         //Vilken riktning spelaren tittar mot.
-        public float angle = 0;
-        public float angleVertical = 0;
+        private float angle = 0;
+        private float angleVertical = 0;
         //Spelarens position.
         public float playerPositionX = 0;
         public float playerPositionY = 0;
         public float playerPositionZ = 0;
         //Hur nära väggar man kan gå. Lägre värde betyder att man kan gå närmare.
-        float wallHitboxSize = 0.2f;
+        readonly float wallHitboxSize = 0.2f;
         //Hur högt upp taket är.
         public const float roomHeight = 1;
         //Alla ytor som finns i det genererade rummet. Spelarens vy kan beräknas med de här.
         public List<Face> currentRoom = new List<Face>();
         //Alla objekt som finns i rummet, till exempel fiender, projektiler eller pickups.
-        public List<Object> objects = new List<Object>();
+        private List<Object> objects = new List<Object>();
         //Används för att kunna lägga till eller ta bort objekt samtidigt som den övre listan körs igenom med en foreach.
         public List<Object> objectsToAdd = new List<Object>();
         public List<Object> objectsToRemove = new List<Object>();
@@ -133,19 +133,19 @@ namespace ProjektUppgift
         int isADown = 0;
         int isDDown = 0;
         //Spelarens hastighet, angiven i enheter per sekund. (Jag vet inte hur stor en enhet är relativt till verkliga mått, men den minsta möjliga väggen är en enhet lång.)
-        float playerSpeed = 2f;
+        readonly float playerSpeed = 2f;
         //Värden som används för att hoppa med spelaren. (Hopp fungerar för det mesta, men taket beter sig konstigt.)
         float verticalVelocity = 0;
-        float jumpForce = 0.5f;
-        float gravity = 0.1f;
+        readonly float jumpForce = 0.5f;
+        readonly float gravity = 0.1f;
         //Hur mycket liv spelaren har i början av varje bana.
-        int startHP = 5;
+        readonly int startHP = 5;
         //Hur mycket liv spelaren har just nu.
-        public int hp;
+        private int hp;
         //Hur stor spelarens hitbox är.
         public float hitBox = 0.15f;
         //Hur många sekunder som måste gå efter spelaren har skjutit tills den kan skjuta igen.
-        float shotCooldown = 1;
+        readonly float shotCooldown = 1;
         //Hur många sekunder som är kvar på väntetiden.
         float remainingShotCoolDown = 0;
         //Om en powerup är aktiv, och i hur många sekunder till den är det.
@@ -153,7 +153,7 @@ namespace ProjektUppgift
         //Om det finns några fiender kvar i rummet.
         public bool isEnemiesInRoom = false;
         //En stopwatch som används för att mäta tiden mellan varje "frame" och därmed kunna använda mått angivna i x / sekund eller liknande.
-        Stopwatch stopwatch = new Stopwatch();
+        readonly Stopwatch stopwatch = new Stopwatch();
         //Hur många millisekunder som har gått sedan förra "framen".
         public long timeElapsed;
         //Om spelet är igång just nu, det vill säga om spelaren inte är i någon meny.
@@ -191,8 +191,8 @@ namespace ProjektUppgift
         public SoundPlayer pickupSound = new SoundPlayer(@"Resources\Pickup.wav");
         public SoundPlayer powerupDepletedSound = new SoundPlayer(@"Resources\Powerup_Depleted.wav");
         //Musik
-        public AudioFileReader audioFileReader = new AudioFileReader(@"Resources\Combat_Music.wav");
-        public WaveOutEvent outPutDevice = new WaveOutEvent();
+        private readonly AudioFileReader audioFileReader = new AudioFileReader(@"Resources\Combat_Music.wav");
+        private readonly WaveOutEvent outPutDevice = new WaveOutEvent();
 
 
         public Form1()
@@ -239,7 +239,7 @@ namespace ProjektUppgift
         }
 
         //Ser till att inget annat stör och skapar knappen för att starta spelet.
-        public void CreateStartButtons()
+        private void CreateStartButtons()
         {
             ReleaseCursor();
             RemoveButtons();
@@ -269,7 +269,7 @@ namespace ProjektUppgift
         }
 
         //Tar bort alla knappar.
-        public void RemoveButtons()
+        private void RemoveButtons()
         {
             foreach (ButtonData button in buttons)
             {
@@ -362,7 +362,7 @@ namespace ProjektUppgift
             powerupLabel.BackColor = Color.Yellow;
         }
 
-        public void DeactivatePowerup()
+        private void DeactivatePowerup()
         {
             powerupDepletedSound.Play();
             powerupActive = 0f;
@@ -431,7 +431,7 @@ namespace ProjektUppgift
         }
 
         //Kod som körs varje gång ett rum laddas in.
-        public void StartRoom(int[,] roomCode)
+        private void StartRoom(int[,] roomCode)
         {
             playerPositionX = 0.5f;
             playerPositionY = 0.5f;
@@ -444,7 +444,7 @@ namespace ProjektUppgift
         }
 
         //Generarar alla start-objekt i ett rum utifrån rummets beskrivning.
-        public List<Object> GenerateObjects(int[,] roomCode)
+        private List<Object> GenerateObjects(int[,] roomCode)
         {
             List<Object> objectsToReturn = new List<Object>();
             for (int i = 0; i < roomCode.GetLength(0); i++)
@@ -589,7 +589,7 @@ namespace ProjektUppgift
             }
         }
 
-        public void MoveObjects()
+        private void MoveObjects()
         {
             foreach (Object obj in objects)
             {
@@ -598,7 +598,7 @@ namespace ProjektUppgift
         }
 
         //Flyttar spelaren beroende på input, riktning och hur lång tid som har gått sen senaste frame:en.
-        public void MovePlayer()
+        private void MovePlayer()
         {
             float horizontal = isADown - isDDown;
             float vertical = isWDown - isSDown;
@@ -663,7 +663,7 @@ namespace ProjektUppgift
             return partRoom;
         }
         //Genererar en bild utifrån alla pixlar som används, och sätter den sedan som den bild som syns.
-        public void UpdateImage()
+        private void UpdateImage()
         {
             Bitmap bmp = new Bitmap(newWidth, newHeight);
             
@@ -690,14 +690,14 @@ namespace ProjektUppgift
         }
 
         //Räknar ut vilken punkt som träffas om man drar en linje från spelarens position med vinklar beroende på vilken pixel som kollas. Returnerar färg, vilken sida som träffades, avstånd och position.
-        public (Color, Face, float, (float, float, float)) CalculatePixel(Pixel pixel, List<Face> room)
+        private (Color, Face, float, (float, float, float)) CalculatePixel(Pixel pixel, List<Face> room)
         {
             CalculateRatio(pixel.xPos, pixel.yPos, angle, angleVertical, out float xDirection, out float yDirection, out float zDirection, out float xPosition, out float yPosition, out float zPosition);
             return CalculateLine(xDirection, yDirection, zDirection, xPosition, yPosition, zPosition, room, angle);
         }
 
         //Används för att få ett objekt i en lista, där man vill loopa igenom listan om index är för högt eller lågt.
-        public int RotateInList (int newIndex, int length)
+        private int RotateInList (int newIndex, int length)
         {
             while (newIndex < 0) 
             {
@@ -711,7 +711,7 @@ namespace ProjektUppgift
         }
 
         //Delar upp ett rum i en massa linjer, som gör det enklare för pixlar att kolla vilken sida de träffar.
-        public Line[] SimplifyRoom(List<Face> room)
+        private Line[] SimplifyRoom(List<Face> room)
         {
             Line[] toreturn = new Line[newHeight];
             for (int i = 0; i < newHeight; i++)
@@ -1145,7 +1145,7 @@ namespace ProjektUppgift
         }
 
         //Metod för att räkna ut riktning och startpunkt för linjen till åvanstående metod, givet en viss punkt på skärmen.
-        public void CalculateRatio(float localXPos, float localYPos, float angle, float angleVertical, out float xDirection, out float yDirection, out float zDirection, out float xPosition, out float yPosition, out float zPosition)
+        private void CalculateRatio(float localXPos, float localYPos, float angle, float angleVertical, out float xDirection, out float yDirection, out float zDirection, out float xPosition, out float yPosition, out float zPosition)
         {
             float baseYPosition = (float)Math.Cos(angleVertical) * localYPos;
             float baseXPosition;
@@ -1482,38 +1482,38 @@ namespace ProjektUppgift
     //Data om varje objekt. (Fiender, pickups, projektiler).
     public class Object
     {
-        public float positionX;
-        public float positionY;
-        public float positionZ;
-        public float angle;
+        private float positionX;
+        private float positionY;
+        private float positionZ;
+        private float angle;
         //Hur snabbt objektek kan vända på sig.
-        public float turningSpeed;
+        private float turningSpeed;
         //Hur snabbt objektet kan röra på sig. (enbart för projektiler)
-        public float movementSpeed;
+        private float movementSpeed;
         //Vilken svårighetsgrad objektet har. (enbart för fiender och projektiler)
-        public int difficulty;
+        private int difficulty;
         //Cooldowns för fiendens skott. (enbart för fiender)
-        public float maxCooldown;
-        public float coolDownRemaining = 0;
+        private float maxCooldown;
+        private float coolDownRemaining = 0;
         //Används för att ge en effekt när ett objekt tar skada. (funkar för allt, men används bara för fiender)
         public float isHurt = 0;
         //Hur mycket liv objektet har (enbart för fiender)
-        public int hp;
+        private int hp;
         //Om objektet är en fiende
         public bool isEnemy = false;
         //Om objektet är en projektil
         public bool isProjectile = false;
         //Om objektet är en pickup
-        public bool isPickUp = false;
+        private bool isPickUp = false;
         //Vilken sorts pickup det är
-        public bool isHeal = false;
-        public bool isPowerup = false;
-        public bool isNextLevel = false;
-        public bool isGoal = false;
+        private bool isHeal = false;
+        private bool isPowerup = false;
+        private bool isNextLevel = false;
+        private bool isGoal = false;
         //Om objektet är en pickup, vilken bild som ska visas på alla sidor.
-        public Picture pickUpPattern;
+        private Picture pickUpPattern;
         //Referens till formen, för att kunna komma åt en massa värden.
-        public Form1 main;
+        private Form1 main;
 
         //Sätter objektets värden från en angiven typ.
         public Object(int type, float positionX, float positionZ, float angle, Form1 main, float positionY = 0.4f)
@@ -1616,7 +1616,7 @@ namespace ProjektUppgift
         }
 
         //Metod som fiender använder för att skjuta. Kallas varje frame.
-        public void Shoot()
+        private void Shoot()
         {
             coolDownRemaining -= (float)main.timeElapsed / 1000;
             if (coolDownRemaining <= 0)
@@ -1655,7 +1655,7 @@ namespace ProjektUppgift
         }
 
         //Metod som kallas när spelaren är tillräckligt nära en pickup. Ger olika effekter beroende på vilken sorts pickup det är.
-        public void PickUpEffect()
+        private void PickUpEffect()
         {
             main.pickupSound.Play();
             if (isHeal)
@@ -1793,7 +1793,7 @@ namespace ProjektUppgift
         }
 
         //Genererar ett rätblock utifrån fiendens värden.
-        public Face[] GenerateCuboid(float xPos, float yPos, float zPos, float height, float length, float angle, Picture[] pictures)
+        private Face[] GenerateCuboid(float xPos, float yPos, float zPos, float height, float length, float angle, Picture[] pictures)
         {
             Face[] toReturn = new Face[6];
             for (int i = 0; i < 4; i++)
@@ -1884,9 +1884,9 @@ namespace ProjektUppgift
     //Används för att styra genererade knappar.
     public class ButtonData
     {
-        public int id;
-        public int type;
-        public Form1 main;
+        private readonly int id;
+        private readonly int type;
+        private readonly Form1 main;
         public Button button;
         public ButtonData(int id, int type, Form1 main)
         {
