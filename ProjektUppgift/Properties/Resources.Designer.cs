@@ -71,6 +71,15 @@ namespace ProjektUppgift.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream Combat_Music {
+            get {
+                return ResourceManager.GetStream("Combat_Music", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap Crosshair {
@@ -87,6 +96,24 @@ namespace ProjektUppgift.Properties {
             get {
                 object obj = ResourceManager.GetObject("Crosshair64", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream Enemy_Hit {
+            get {
+                return ResourceManager.GetStream("Enemy_Hit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream Enemy_Killed {
+            get {
+                return ResourceManager.GetStream("Enemy_Killed", resourceCulture);
             }
         }
         
@@ -211,12 +238,39 @@ namespace ProjektUppgift.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream Pickup {
+            get {
+                return ResourceManager.GetStream("Pickup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream Player_Hit {
+            get {
+                return ResourceManager.GetStream("Player_Hit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap Powerup {
             get {
                 object obj = ResourceManager.GetObject("Powerup", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream Powerup_Depleted {
+            get {
+                return ResourceManager.GetStream("Powerup_Depleted", resourceCulture);
             }
         }
         
@@ -257,6 +311,15 @@ namespace ProjektUppgift.Properties {
             get {
                 object obj = ResourceManager.GetObject("Roof1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream ShotSound {
+            get {
+                return ResourceManager.GetStream("ShotSound", resourceCulture);
             }
         }
         

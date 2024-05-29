@@ -184,14 +184,14 @@ namespace ProjektUppgift
         public Picture colorPatternHeal = new Picture (Properties.Resources.Heal);
 
         //Olika ljudeffekter
-        public SoundPlayer shotSound = new SoundPlayer("ShotSound.wav");
-        public SoundPlayer playerHitSound = new SoundPlayer("Player_Hit.wav");
-        public SoundPlayer enemyHitSound = new SoundPlayer("Enemy_Hit.wav");
-        public SoundPlayer enemyKilledSound = new SoundPlayer("Enemy_Killed.wav");
-        public SoundPlayer pickupSound = new SoundPlayer("Pickup.wav");
-        public SoundPlayer powerupDepletedSound = new SoundPlayer("Powerup_Depleted.wav");
+        public SoundPlayer shotSound = new SoundPlayer(@"Resources\ShotSound.wav");
+        public SoundPlayer playerHitSound = new SoundPlayer(@"Resources\Player_Hit.wav");
+        public SoundPlayer enemyHitSound = new SoundPlayer(@"Resources\Enemy_Hit.wav");
+        public SoundPlayer enemyKilledSound = new SoundPlayer(@"Resources\Enemy_Killed.wav");
+        public SoundPlayer pickupSound = new SoundPlayer(@"Resources\Pickup.wav");
+        public SoundPlayer powerupDepletedSound = new SoundPlayer(@"Resources\Powerup_Depleted.wav");
         //Musik
-        public AudioFileReader audioFileReader = new AudioFileReader("Combat_Music.wav");
+        public AudioFileReader audioFileReader = new AudioFileReader(@"Resources\Combat_Music.wav");
         public WaveOutEvent outPutDevice = new WaveOutEvent();
 
 
