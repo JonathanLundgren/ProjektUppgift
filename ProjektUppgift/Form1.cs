@@ -871,7 +871,7 @@ namespace ProjektUppgift
             }
             return toreturn;
 
-            //Räknar ut var på skärmen en punkt hamnar.
+            //Räknar ut var på skärmen en punkt hamnar. Returnerar även var punkten är relativt till kameran.
             (float, float, float, float, float) GetPosOnScreen(float x, float y, float z, bool alreadymodified)
             {
                 float newX;
